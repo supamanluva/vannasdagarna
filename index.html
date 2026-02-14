@@ -2451,9 +2451,9 @@ function initLevel3() {
         enemies.push({
             type: 'discgolfer',
             x: sp.x,
-            y: GAME_H - 46,
-            w: 12,
-            h: 16,
+            y: GAME_H - 44,
+            w: 20,
+            h: 14,
             hp: 30,
             maxHp: 30,
             speed: 0.2,
@@ -2692,17 +2692,20 @@ function drawArea_PARK(areaX, camX) {
         }
     }
 
-    // Dog poop warning sign
-    drawRect(sx + 500, GAME_H - 65, 2, 25, '#555555');
-    drawRect(sx + 494, GAME_H - 72, 16, 10, PAL.white);
-    drawRect(sx + 496, GAME_H - 70, 12, 6, '#ffeeee');
+    // Dog poop warning sign - bigger and clearer
+    drawRect(sx + 506, GAME_H - 65, 2, 30, '#555555');
+    drawRect(sx + 488, GAME_H - 80, 40, 18, PAL.white);
+    drawRect(sx + 490, GAME_H - 78, 36, 14, '#ffeeee');
     // Poop icon on sign
-    drawPixel(sx + 500, GAME_H - 69, '#6a4a2a');
-    drawPixel(sx + 501, GAME_H - 70, '#6a4a2a');
-    drawPixel(sx + 502, GAME_H - 69, '#6a4a2a');
-    // Red cross
-    drawRect(sx + 496, GAME_H - 68, 12, 1, PAL.red);
-    drawRect(sx + 501, GAME_H - 71, 1, 6, PAL.red);
+    drawRect(sx + 503, GAME_H - 76, 3, 2, '#6a4a2a');
+    drawRect(sx + 504, GAME_H - 78, 2, 2, '#7a5a3a');
+    drawRect(sx + 505, GAME_H - 79, 1, 1, '#6a4a2a');
+    // Red diagonal cross
+    drawRect(sx + 492, GAME_H - 75, 30, 1, PAL.red);
+    drawRect(sx + 506, GAME_H - 78, 1, 10, PAL.red);
+    // Text below icon
+    drawText('PLOCKA', sx + 491, GAME_H - 70, PAL.red, 1);
+    drawText('UPP!', sx + 498, GAME_H - 64, PAL.red, 1);
 }
 
 // ---- LÅNGGATAN & STJÄRNGATAN (Residential streets) ----
@@ -2710,13 +2713,13 @@ function drawArea_STREETS(areaX, camX) {
     const sx = Math.floor(areaX - camX);
 
     // Street name signs
-    drawRect(sx + 20, GAME_H - 95, 2, 60, '#555555');
-    drawRect(sx + 10, GAME_H - 100, 40, 12, '#2244aa');
+    drawRect(sx + 30, GAME_H - 95, 2, 60, '#555555');
+    drawRect(sx + 10, GAME_H - 100, 58, 12, '#2244aa');
     drawText('LÅNGGATAN', sx + 12, GAME_H - 98, PAL.white, 1);
 
-    drawRect(sx + 620, GAME_H - 95, 2, 60, '#555555');
-    drawRect(sx + 610, GAME_H - 100, 55, 12, '#2244aa');
-    drawText('STJÄRNGATAN', sx + 612, GAME_H - 98, PAL.white, 1);
+    drawRect(sx + 640, GAME_H - 95, 2, 60, '#555555');
+    drawRect(sx + 608, GAME_H - 100, 70, 12, '#2244aa');
+    drawText('STJÄRNGATAN', sx + 610, GAME_H - 98, PAL.white, 1);
 
     // Road through the neighborhood
     drawRect(sx, GAME_H - 8, 1300, 8, '#3a3a3a');
@@ -2866,9 +2869,13 @@ function drawArea_DISCGOLF(areaX, camX) {
     });
 
     // Warning sign: flying discs
-    drawRect(sx + 500, GAME_H - 80, 2, 48, '#555555');
-    drawRect(sx + 490, GAME_H - 88, 24, 10, PAL.yellow);
-    drawText('VARNING!', sx + 492, GAME_H - 86, PAL.red, 1);
+    drawRect(sx + 510, GAME_H - 80, 2, 48, '#555555');
+    drawRect(sx + 488, GAME_H - 92, 56, 14, PAL.yellow);
+    drawRect(sx + 490, GAME_H - 90, 52, 10, '#ffee44');
+    drawText('VARNING!', sx + 490, GAME_H - 89, PAL.red, 1);
+    // Disc icon below text
+    drawRect(sx + 506, GAME_H - 82, 6, 2, '#ff4444');
+    drawRect(sx + 508, GAME_H - 83, 2, 1, '#ffaaaa');
 }
 
 // ---- VÄNNÄS ISHALL ----
@@ -4044,11 +4051,11 @@ function updateEnemies() {
             // Launch disc projectile
             const throwDir = player.x < e.x ? -1 : 1;
             game.discProjectiles.push({
-                x: e.x + (throwDir > 0 ? 14 : -6),
-                y: e.y + 4,
-                vx: throwDir * 3,
-                vy: -0.5 + Math.random() * 0.5,
-                w: 6, h: 2,
+                x: e.x + (throwDir > 0 ? 20 : -10),
+                y: e.y + 6,
+                vx: throwDir * 3.5,
+                vy: -0.3 + Math.random() * 0.4,
+                w: 10, h: 4,
                 life: 120,
                 spin: 0,
             });
@@ -4979,32 +4986,32 @@ function drawEnemies() {
         if (e.type === 'discgolfer') {
             const golferSprite = getDiscGolferSprite(e.frame, e.throwing);
             const flipGolfer = player.x < e.x;
-            drawSprite(golferSprite, sx, sy, flipGolfer);
+            drawSprite2x(golferSprite, sx, sy, flipGolfer);
 
             // Throwing wind-up effect
             if (e.throwing) {
                 // Speed lines from arm
-                const armSide = flipGolfer ? sx - 2 : sx + e.w + 2;
-                for (let sl = 0; sl < 3; sl++) {
-                    const lineX = flipGolfer ? armSide + sl * 2 : armSide - sl * 2;
-                    drawPixel(lineX, sy + 4 + sl, '#aaddff');
+                const armSide = flipGolfer ? sx - 4 : sx + e.w + 4;
+                for (let sl = 0; sl < 4; sl++) {
+                    const lineX = flipGolfer ? armSide + sl * 3 : armSide - sl * 3;
+                    drawRect(lineX, sy + 6 + sl * 2, 2, 1, '#aaddff');
                 }
             }
 
             // Disc golf text when idle
             if (!e.throwing && game.frameCount % 80 < 10) {
-                drawText('KAST!', sx - 4, sy - 10, PAL.yellow, 1);
+                drawText('KAST!', sx - 2, sy - 12, PAL.yellow, 1);
             }
 
             // Ground shadow
             bctx.fillStyle = 'rgba(0,0,0,0.2)';
-            bctx.fillRect(sx + 2, sy + 14, e.w - 4, 2);
+            bctx.fillRect(sx + 2, sy + e.h, e.w - 4, 3);
 
             // HP bar
             if (e.hp < e.maxHp) {
-                drawRect(sx, sy - 12, e.w, 3, PAL.black);
-                drawRect(sx, sy - 11, e.w, 2, '#330000');
-                drawRect(sx, sy - 11, Math.floor(e.w * e.hp / e.maxHp), 2, PAL.green);
+                drawRect(sx, sy - 14, e.w, 3, PAL.black);
+                drawRect(sx, sy - 13, e.w, 2, '#330000');
+                drawRect(sx, sy - 13, Math.floor(e.w * e.hp / e.maxHp), 2, PAL.green);
             }
         }
 
@@ -5614,33 +5621,46 @@ function drawDogPoops() {
 function drawDiscProjectiles() {
     if (!game.discProjectiles) return;
     game.discProjectiles.forEach(d => {
-        if (!d.active) return;
         const sx = Math.floor(d.x - game.camX);
         const sy = Math.floor(d.y);
-        if (sx < -10 || sx > GAME_W + 10) return;
+        if (sx < -20 || sx > GAME_W + 20) return;
 
-        // Spinning frisbee/disc
+        // Spinning frisbee/disc - BIG and visible
         const spin = d.spin || game.frameCount * 0.3;
-        const discColors = ['#ff4444', '#ff6666', '#cc2222', '#ee5555'];
-        const mainCol = discColors[Math.floor(Math.abs(spin)) % 4];
+        const flash = game.frameCount % 6 < 3;
+        const mainCol = flash ? '#ff3333' : '#ff6644';
+        const rimCol = flash ? '#ffaa00' : '#ff8800';
 
-        // Disc body (oval shape based on spin angle)
+        // Disc body (wide oval, always visible)
         const stretch = Math.abs(Math.cos(spin));
-        const discW = Math.max(2, Math.floor(6 * stretch + 2));
-        const discH = 3;
-        const offsetX = Math.floor((8 - discW) / 2);
+        const discW = Math.max(6, Math.floor(10 * stretch + 4));
+        const discH = 5;
+        const offsetX = Math.floor((14 - discW) / 2);
 
+        // Glow behind disc
+        bctx.fillStyle = 'rgba(255,100,50,0.35)';
+        bctx.fillRect(Math.floor(sx + offsetX - 2), Math.floor(sy - 2), discW + 4, discH + 4);
+
+        // Main disc body
         drawRect(sx + offsetX, sy, discW, discH, mainCol);
-        drawRect(sx + offsetX + 1, sy + 1, Math.max(1, discW - 2), 1, '#ffaaaa'); // Highlight stripe
+        // Rim highlight
+        drawRect(sx + offsetX, sy, discW, 1, rimCol);
+        drawRect(sx + offsetX, sy + discH - 1, discW, 1, '#cc2200');
+        // Center stripe
+        drawRect(sx + offsetX + 1, sy + 2, Math.max(2, discW - 2), 1, '#ffccaa');
 
-        // Motion trail
+        // Motion trail (thick)
         const trailDir = d.vx > 0 ? -1 : 1;
-        drawPixel(sx + offsetX + trailDir * 3, sy + 1, 'rgba(255,100,100,0.4)');
-        drawPixel(sx + offsetX + trailDir * 5, sy + 1, 'rgba(255,100,100,0.2)');
+        for (let t = 1; t <= 4; t++) {
+            const alpha = 0.5 - t * 0.1;
+            bctx.fillStyle = `rgba(255,100,50,${alpha})`;
+            bctx.fillRect(Math.floor(sx + offsetX + trailDir * t * 4), Math.floor(sy + 1), 3, 3);
+        }
 
-        // Spin sparkle
-        if (game.frameCount % 4 < 2) {
-            drawPixel(sx + offsetX + Math.floor(discW / 2), sy - 1, PAL.white);
+        // Spin sparkles
+        if (game.frameCount % 3 < 2) {
+            drawRect(sx + offsetX + Math.floor(discW / 2) - 1, sy - 2, 2, 1, PAL.white);
+            drawRect(sx + offsetX + discW - 1, sy + 1, 1, 2, PAL.white);
         }
     });
 }
