@@ -120,7 +120,7 @@ function sfxStomp(){ playTone(180, 0.06, 'square', 0.08); playTone(260, 0.08, 's
 // ============================================================
 // Note frequency table (octaves 2-6)
 const NOTE = {
-    C2:65.41,D2:73.42,E2:82.41,F2:87.31,G2:98,A2:110,B2:123.47,
+    C2:65.41,D2:73.42,Eb2:77.78,E2:82.41,F2:87.31,Fs2:92.50,G2:98,Ab2:103.83,A2:110,Bb2:116.54,B2:123.47,
     C3:130.81,D3:146.83,Eb3:155.56,E3:164.81,F3:174.61,Fs3:185,G3:196,Ab3:207.65,A3:220,Bb3:233.08,B3:246.94,
     C4:261.63,Cs4:277.18,D4:293.66,Eb4:311.13,E4:329.63,F4:349.23,Fs4:369.99,G4:392,Ab4:415.30,A4:440,Bb4:466.16,B4:493.88,
     C5:523.25,Cs5:554.37,D5:587.33,Eb5:622.25,E5:659.26,F5:698.46,Fs5:739.99,G5:783.99,Ab5:830.61,A5:880,Bb5:932.33,B5:987.77,
@@ -490,6 +490,58 @@ const SONG_BOSS = {
            'KKHKSKHOKKH.SKHO',
 };
 
+// --- SKRAECKOEDLAN: Super Heavy Doom Stoner Rock ---
+const SONG_STONER = {
+    bpm: 65,
+    melody: [
+        // Crushing doom riff - E minor with tritone (E-Bb = devil's interval)
+        [NOTE.E3,8],[NOTE.R,4],[NOTE.E3,4],
+        [NOTE.G3,4],[NOTE.A3,4],[NOTE.G3,4],[NOTE.E3,4],
+        [NOTE.D3,8],[NOTE.R,4],[NOTE.D3,4],
+        [NOTE.E3,4],[NOTE.G3,4],[NOTE.E3,4],[NOTE.D3,4],
+        // Ascending doom with tritone
+        [NOTE.E3,8],[NOTE.G3,8],
+        [NOTE.A3,8],[NOTE.Bb3,8],
+        // Descending heavy resolve
+        [NOTE.A3,8],[NOTE.G3,8],
+        [NOTE.E3,8],[NOTE.R,8],
+    ],
+    harmony: [
+        // Power chord fifths
+        [NOTE.B3,8],[NOTE.R,4],[NOTE.B3,4],
+        [NOTE.D4,4],[NOTE.E4,4],[NOTE.D4,4],[NOTE.B3,4],
+        [NOTE.A3,8],[NOTE.R,4],[NOTE.A3,4],
+        [NOTE.B3,4],[NOTE.D4,4],[NOTE.B3,4],[NOTE.A3,4],
+        // Ascending fifths
+        [NOTE.B3,8],[NOTE.D4,8],
+        [NOTE.E4,8],[NOTE.F4,8],
+        // Descending
+        [NOTE.E4,8],[NOTE.D4,8],
+        [NOTE.B3,8],[NOTE.R,8],
+    ],
+    bass: [
+        // Super heavy bass rumble
+        [NOTE.E2,4],[NOTE.E2,4],[NOTE.E2,4],[NOTE.R,4],
+        [NOTE.E2,4],[NOTE.G2,4],[NOTE.A2,4],[NOTE.G2,4],
+        [NOTE.D2,4],[NOTE.D2,4],[NOTE.D2,4],[NOTE.R,4],
+        [NOTE.D2,4],[NOTE.E2,4],[NOTE.G2,4],[NOTE.D2,4],
+        // Follow melody
+        [NOTE.E2,4],[NOTE.E2,4],[NOTE.G2,4],[NOTE.G2,4],
+        [NOTE.A2,4],[NOTE.A2,4],[NOTE.B2,4],[NOTE.B2,4],
+        // Resolve
+        [NOTE.A2,4],[NOTE.A2,4],[NOTE.G2,4],[NOTE.G2,4],
+        [NOTE.E2,4],[NOTE.E2,4],[NOTE.E2,4],[NOTE.R,4],
+    ],
+    drums: 'K...S...K...S...' +
+           'K...S...K.K.S...' +
+           'K...S...K...S...' +
+           'K...SK..K.K.S...' +
+           'K...S...K...S...' +
+           'K...S...K.K.S...' +
+           'K...S.K.K...S...' +
+           'K.K.S.K.K.K.SKHO',
+};
+
 // --- Song player ---
 function playSong(song) {
     ensureAudio();
@@ -514,7 +566,7 @@ function playSong(song) {
     const drm = song.drums;
 
     musicEngine.intervalId = setInterval(() => {
-        if (game.state !== 'playing' && game.state !== 'victory') return;
+        if (game.state !== 'playing' && game.state !== 'victory' && game.state !== 'cutscene') return;
 
         // --- MELODY (Pulse 1) ---
         if (melodyTicksLeft <= 0 && mel.length > 0) {
@@ -587,6 +639,61 @@ function playBossMusic() {
 // Switch back to level music after boss
 function playLevelMusic() {
     playMusic();
+}
+
+// Special heavy stoner doom player for SKRAECKOEDLAN (sawtooth + louder)
+function playSkraeckoedlanMusic() {
+    ensureAudio();
+    stopMusic();
+    const song = SONG_STONER;
+    musicEngine.currentSong = song;
+    musicEngine.playing = true;
+    musicEngine.currentTick = 0;
+    const tpb = 4;
+    const tickDuration = 60 / (song.bpm * tpb);
+    const tickMs = tickDuration * 1000;
+    let melodyIdx = 0, melodyTicksLeft = 0;
+    let harmonyIdx = 0, harmonyTicksLeft = 0;
+    let bassIdx = 0, bassTicksLeft = 0;
+    let drumIdx = 0;
+    const mel = song.melody, har = song.harmony, bas = song.bass, drm = song.drums;
+    musicEngine.intervalId = setInterval(() => {
+        if (game.state !== 'playing' && game.state !== 'victory' && game.state !== 'cutscene') return;
+        // MELODY - heavy sawtooth wave, louder
+        if (melodyTicksLeft <= 0 && mel.length > 0) {
+            const entry = mel[melodyIdx % mel.length];
+            melodyTicksLeft = entry[1];
+            if (entry[0] > 0) playNoteOnChannel(entry[0], entry[1] * tickDuration * 0.9, 'sawtooth', 0.06, 0);
+            melodyIdx++;
+        }
+        melodyTicksLeft--;
+        // HARMONY - distorted square, thicker detune
+        if (harmonyTicksLeft <= 0 && har.length > 0) {
+            const entry = har[harmonyIdx % har.length];
+            harmonyTicksLeft = entry[1];
+            if (entry[0] > 0) playNoteOnChannel(entry[0], entry[1] * tickDuration * 0.85, 'square', 0.04, 12);
+            harmonyIdx++;
+        }
+        harmonyTicksLeft--;
+        // BASS - crushing sawtooth, extra loud
+        if (bassTicksLeft <= 0 && bas.length > 0) {
+            const entry = bas[bassIdx % bas.length];
+            bassTicksLeft = entry[1];
+            if (entry[0] > 0) playNoteOnChannel(entry[0], entry[1] * tickDuration * 0.9, 'sawtooth', 0.09, 0);
+            bassIdx++;
+        }
+        bassTicksLeft--;
+        // DRUMS - heavy
+        if (drm.length > 0) {
+            const dc = drm[drumIdx % drm.length];
+            if (dc === 'K') playKick();
+            else if (dc === 'S') playSnare();
+            else if (dc === 'H') playHiHat(false);
+            else if (dc === 'O') playHiHat(true);
+            drumIdx++;
+        }
+        musicEngine.currentTick++;
+    }, tickMs);
 }
 
 // ============================================================
@@ -1576,6 +1683,8 @@ const game = {
     level3BossDefeated: false,
     bandMembersDefeated: 0,
     bandMembersTotal: 3,
+    cutscenePhase: '',
+    cutsceneTimer: 0,
 };
 
 const player = {
@@ -1628,6 +1737,8 @@ function initLevel() {
     game.level3BossActive = false;
     game.level3BossDefeated = false;
     game.bandMembersDefeated = 0;
+    game.cutscenePhase = '';
+    game.cutsceneTimer = 0;
     game.dogPoops = [];
     game.discProjectiles = [];
 
@@ -3914,8 +4025,11 @@ function updatePlayer() {
             const aliveBosses = enemies.filter(e => e.type === 'boss' && e.active);
             if (aliveBosses.length === 0 && !game.level3BossDefeated) {
                 game.level3BossDefeated = true;
-                game.state = 'victory';
+                game.state = 'cutscene';
+                game.cutscenePhase = 'fadeout';
+                game.cutsceneTimer = 120;
                 game.highScore = Math.max(game.highScore, game.score);
+                stopMusic();
             }
         }
     }
@@ -6480,6 +6594,579 @@ function drawGameOverScreen() {
     }
 }
 
+// ============================================================
+//  CUTSCENE: Post-Boss Sequence (Medborgarhuset → SKRAECKOEDLAN)
+// ============================================================
+function updateCutscene() {
+    game.cutsceneTimer--;
+
+    // Allow skip during concert
+    if (game.cutscenePhase === 'concert' && game.cutsceneTimer < 700 && keys['Enter']) {
+        game.state = 'victory';
+        keys['Enter'] = false;
+        return;
+    }
+
+    if (game.cutsceneTimer <= 0) {
+        switch (game.cutscenePhase) {
+            case 'fadeout':
+                game.cutscenePhase = 'medborgarhuset';
+                game.cutsceneTimer = 420;
+                break;
+            case 'medborgarhuset':
+                game.cutscenePhase = 'concert_intro';
+                game.cutsceneTimer = 180;
+                playSkraeckoedlanMusic();
+                break;
+            case 'concert_intro':
+                game.cutscenePhase = 'concert';
+                game.cutsceneTimer = 900;
+                break;
+            case 'concert':
+                game.state = 'victory';
+                break;
+        }
+    }
+}
+
+function drawCutscene() {
+    switch (game.cutscenePhase) {
+        case 'fadeout':
+            drawCutsceneFadeout();
+            break;
+        case 'medborgarhuset':
+            drawCutsceneMedborgarhuset();
+            break;
+        case 'concert_intro':
+            drawCutsceneConcertIntro();
+            break;
+        case 'concert':
+            drawCutsceneConcert();
+            break;
+    }
+}
+
+function drawCutsceneFadeout() {
+    bctx.fillStyle = '#000000';
+    bctx.fillRect(0, 0, GAME_W, GAME_H);
+    const progress = 1 - (game.cutsceneTimer / 120);
+    if (progress > 0.3) {
+        drawText('BANDET ÄR KROSSAT!', GAME_W/2 - 58, GAME_H/2 - 20, PAL.red, 1);
+    }
+    if (progress > 0.6) {
+        if (game.frameCount % 40 < 30) {
+            drawText('GÅ TILL MEDBORGARHUSET!', GAME_W/2 - 70, GAME_H/2 + 5, PAL.yellow, 1);
+        }
+    }
+}
+
+function drawCutsceneMedborgarhuset() {
+    // Evening sky
+    bctx.fillStyle = '#0a0a2a';
+    bctx.fillRect(0, 0, GAME_W, GAME_H * 0.6);
+
+    // Stars
+    for (let i = 0; i < 20; i++) {
+        const sx = (i * 73 + 10) % GAME_W;
+        const sy = (i * 37 + 5) % (GAME_H * 0.4);
+        if ((game.frameCount + i * 13) % 30 < 25) {
+            drawPixel(sx, sy, '#ffffff');
+        }
+    }
+
+    // Ground
+    bctx.fillStyle = '#333333';
+    bctx.fillRect(0, GAME_H - 40, GAME_W, 40);
+    bctx.fillStyle = '#444444';
+    bctx.fillRect(0, GAME_H - 42, GAME_W, 3);
+    bctx.fillStyle = '#666666';
+    bctx.fillRect(0, GAME_H - 52, GAME_W, 12);
+
+    // Street lamp left
+    drawRect(40, GAME_H - 120, 2, 80, '#555555');
+    drawRect(36, GAME_H - 122, 10, 4, '#444444');
+    drawPixel(38, GAME_H - 124, '#ffdd88');
+    drawPixel(39, GAME_H - 124, '#ffdd88');
+    drawPixel(40, GAME_H - 124, '#ffdd88');
+    drawPixel(41, GAME_H - 124, '#ffdd88');
+    drawPixel(42, GAME_H - 124, '#ffdd88');
+
+    // Street lamp right
+    drawRect(GAME_W - 42, GAME_H - 120, 2, 80, '#555555');
+    drawRect(GAME_W - 46, GAME_H - 122, 10, 4, '#444444');
+    drawPixel(GAME_W - 44, GAME_H - 124, '#ffdd88');
+    drawPixel(GAME_W - 43, GAME_H - 124, '#ffdd88');
+    drawPixel(GAME_W - 42, GAME_H - 124, '#ffdd88');
+    drawPixel(GAME_W - 41, GAME_H - 124, '#ffdd88');
+
+    // === MEDBORGARHUSET BUILDING ===
+    const bx = GAME_W/2 - 60;
+    const by = GAME_H - 120;
+
+    // Main building
+    drawRect(bx, by, 120, 70, '#ddcc88');
+    drawRect(bx + 2, by + 2, 116, 66, '#ccbb77');
+    // Roof
+    drawRect(bx, by - 8, 120, 10, '#aa6633');
+    drawRect(bx - 4, by - 4, 128, 5, '#8B4513');
+    drawRect(bx + 2, by - 7, 116, 2, '#996633');
+
+    // Windows top row
+    for (let wi = 0; wi < 4; wi++) {
+        const wx = bx + 12 + wi * 28;
+        drawRect(wx, by + 10, 16, 14, '#224466');
+        drawRect(wx + 1, by + 11, 14, 12, '#335577');
+        drawRect(wx + 7, by + 10, 2, 14, '#ccbb77');
+        drawRect(wx, by + 16, 16, 2, '#ccbb77');
+        drawRect(wx + 2, by + 12, 5, 3, '#557799');
+        drawRect(wx + 9, by + 12, 5, 3, '#557799');
+    }
+
+    // Bottom windows
+    drawRect(bx + 12, by + 35, 16, 18, '#224466');
+    drawRect(bx + 13, by + 36, 14, 16, '#335577');
+    drawRect(bx + 92, by + 35, 16, 18, '#224466');
+    drawRect(bx + 93, by + 36, 14, 16, '#335577');
+
+    // Door
+    drawRect(bx + 46, by + 32, 28, 36, '#553311');
+    drawRect(bx + 48, by + 34, 24, 34, '#664422');
+    drawRect(bx + 48, by + 34, 24, 2, '#775533');
+    drawRect(bx + 59, by + 34, 2, 34, '#553311');
+    drawPixel(bx + 56, by + 50, '#ccaa44');
+    drawPixel(bx + 63, by + 50, '#ccaa44');
+
+    // Sign
+    drawRect(bx + 10, by - 18, 100, 12, '#663322');
+    drawRect(bx + 12, by - 16, 96, 8, '#884433');
+    drawText('MEDBORGARHUSET', bx + 18, by - 15, PAL.yellow, 1);
+
+    // Lamp above door
+    drawRect(bx + 55, by + 28, 10, 4, '#333333');
+    for (let li = 0; li < 5; li++) {
+        drawPixel(bx + 57 + li, by + 32, '#ffdd88');
+    }
+
+    // === CHARACTERS ===
+    const elapsed = 420 - game.cutsceneTimer;
+
+    // Player W.IKATTI walks in from left (first ~60 frames)
+    const playerTargetX = bx + 20;
+    const px = Math.min(elapsed * 2, playerTargetX);
+    const py = GAME_H - 68;
+    const walkFrame = elapsed < 60 ? Math.floor(elapsed / 6) % 4 : 0;
+
+    // W.IKATTI sprite
+    drawRect(px + 2, py, 10, 3, '#444444');
+    drawRect(px + 3, py + 3, 8, 6, PAL.peach);
+    drawPixel(px + 5, py + 5, PAL.black);
+    drawPixel(px + 8, py + 5, PAL.black);
+    drawPixel(px + 6, py + 7, '#cc9977');
+    drawPixel(px + 7, py + 7, '#cc9977');
+    drawRect(px + 2, py + 9, 10, 8, '#2244aa');
+    drawRect(px + 1, py + 10, 2, 6, PAL.peach);
+    drawRect(px + 11, py + 10, 2, 6, PAL.peach);
+    if (walkFrame % 2 === 0) {
+        drawRect(px + 3, py + 17, 3, 5, '#222244');
+        drawRect(px + 8, py + 17, 3, 5, '#222244');
+    } else {
+        drawRect(px + 2, py + 17, 3, 5, '#222244');
+        drawRect(px + 9, py + 17, 3, 5, '#222244');
+    }
+    drawRect(px + 2, py + 22, 4, 2, '#111111');
+    drawRect(px + 7, py + 22, 4, 2, '#111111');
+
+    // Näringslivsplaneraren appears at door after 90 frames
+    if (elapsed > 90) {
+        const npx = bx + 70;
+        const npy = GAME_H - 68;
+        // Hair
+        drawRect(npx + 2, npy, 10, 3, '#332211');
+        // Head
+        drawRect(npx + 3, npy + 3, 8, 6, PAL.peach);
+        // Glasses
+        drawRect(npx + 4, npy + 4, 3, 3, '#333333');
+        drawRect(npx + 8, npy + 4, 3, 3, '#333333');
+        drawPixel(npx + 7, npy + 5, '#333333');
+        drawPixel(npx + 5, npy + 5, '#3366aa');
+        drawPixel(npx + 9, npy + 5, '#3366aa');
+        drawPixel(npx + 7, npy + 7, '#cc9977');
+        // Suit body
+        drawRect(npx + 2, npy + 9, 10, 8, '#222222');
+        drawRect(npx + 4, npy + 9, 6, 8, '#333333');
+        // Red tie
+        drawRect(npx + 6, npy + 9, 2, 6, '#cc2222');
+        // Arms
+        drawRect(npx + 1, npy + 10, 2, 6, '#222222');
+        drawRect(npx + 11, npy + 10, 2, 6, '#222222');
+        // Briefcase
+        drawRect(npx + 12, npy + 15, 6, 4, '#8B4513');
+        drawRect(npx + 13, npy + 14, 4, 1, '#aa6633');
+        // Legs
+        drawRect(npx + 3, npy + 17, 3, 5, '#111111');
+        drawRect(npx + 8, npy + 17, 3, 5, '#111111');
+        // Shoes
+        drawRect(npx + 2, npy + 22, 4, 2, '#222222');
+        drawRect(npx + 7, npy + 22, 4, 2, '#222222');
+    }
+
+    // === DIALOGUE BOX ===
+    const dialogueY = GAME_H - 36;
+    drawRect(4, dialogueY - 2, GAME_W - 8, 34, '#000000');
+    drawRect(6, dialogueY, GAME_W - 12, 30, '#111122');
+    drawRect(6, dialogueY, GAME_W - 12, 2, '#333355');
+
+    if (elapsed < 120) {
+        drawText('...', GAME_W/2 - 10, dialogueY + 10, PAL.grey, 1);
+    } else if (elapsed < 200) {
+        drawText('W.IKATTI:', 12, dialogueY + 4, PAL.green, 1);
+        drawText('RIFF RAFF RUFF ÄR BORTA!', 12, dialogueY + 16, PAL.white, 1);
+    } else if (elapsed < 260) {
+        drawText('W.IKATTI:', 12, dialogueY + 4, PAL.green, 1);
+        drawText('VI BEHÖVER ETT RIKTIGT BAND!', 12, dialogueY + 16, PAL.white, 1);
+    } else if (elapsed < 320) {
+        drawText('NÄRINGSLIVSPLANERAREN:', 12, dialogueY + 4, PAL.orange, 1);
+        drawText('HMMMM...', 12, dialogueY + 16, PAL.white, 1);
+    } else if (elapsed < 380) {
+        drawText('NÄRINGSLIVSPLANERAREN:', 12, dialogueY + 4, PAL.orange, 1);
+        drawText('JAG RINGER SKRAECKOEDLAN!', 12, dialogueY + 16, PAL.yellow, 1);
+    } else {
+        drawText('W.IKATTI:', 12, dialogueY + 4, PAL.green, 1);
+        drawText('YEEEEEES!', 12, dialogueY + 16, PAL.yellow, 2);
+    }
+}
+
+function drawCutsceneConcertIntro() {
+    bctx.fillStyle = '#000000';
+    bctx.fillRect(0, 0, GAME_W, GAME_H);
+
+    const progress = 1 - (game.cutsceneTimer / 180);
+
+    if (progress > 0.1) {
+        // Fire glow around text
+        for (let i = 0; i < 30; i++) {
+            const fx = GAME_W/2 - 80 + i * 5.5 + Math.sin(game.frameCount * 0.1 + i) * 3;
+            const fy = GAME_H/2 - 30 + Math.sin(game.frameCount * 0.15 + i * 0.5) * 5;
+            const colors = ['#ff4400', '#ff6600', '#ff8800', '#ffaa00'];
+            drawPixel(Math.floor(fx), Math.floor(fy), colors[i % 4]);
+            drawPixel(Math.floor(fx), Math.floor(fy) - 1, colors[(i + 1) % 4]);
+        }
+
+        // Cactus left
+        const cx1 = GAME_W/2 - 110;
+        const cy1 = GAME_H/2 - 10;
+        drawRect(cx1, cy1, 4, 20, '#2d5a1e');
+        drawRect(cx1 - 4, cy1 + 5, 4, 3, '#2d5a1e');
+        drawRect(cx1 - 4, cy1 + 2, 2, 6, '#2d5a1e');
+        drawRect(cx1 + 4, cy1 + 8, 4, 3, '#2d5a1e');
+        drawRect(cx1 + 6, cy1 + 5, 2, 6, '#2d5a1e');
+        drawPixel(cx1 - 1, cy1 + 3, '#558833');
+        drawPixel(cx1 + 4, cy1 + 7, '#558833');
+
+        // Cactus right
+        const cx2 = GAME_W/2 + 110;
+        drawRect(cx2, cy1, 4, 20, '#2d5a1e');
+        drawRect(cx2 - 4, cy1 + 8, 4, 3, '#2d5a1e');
+        drawRect(cx2 - 4, cy1 + 5, 2, 6, '#2d5a1e');
+        drawRect(cx2 + 4, cy1 + 5, 4, 3, '#2d5a1e');
+        drawRect(cx2 + 6, cy1 + 2, 2, 6, '#2d5a1e');
+        drawPixel(cx2 - 1, cy1 + 7, '#558833');
+        drawPixel(cx2 + 4, cy1 + 3, '#558833');
+
+        // Shadow text
+        drawText('SKRAECKOEDLAN', GAME_W/2 - 79, GAME_H/2 - 21, '#882200', 2);
+        // Main text
+        drawText('SKRAECKOEDLAN', GAME_W/2 - 78, GAME_H/2 - 22, '#ff6600', 2);
+    }
+
+    if (progress > 0.4) {
+        drawText('SPELAR PÅ OSKARSPARKEN!', GAME_W/2 - 70, GAME_H/2 + 10, PAL.yellow, 1);
+    }
+
+    if (progress > 0.7) {
+        if (game.frameCount % 30 < 22) {
+            drawText('SUPER HEAVY DOOM STONER ROCK', GAME_W/2 - 86, GAME_H/2 + 30, PAL.red, 1);
+        }
+    }
+}
+
+function drawCutsceneConcert() {
+    // Night sky
+    bctx.fillStyle = '#050520';
+    bctx.fillRect(0, 0, GAME_W, 120);
+    bctx.fillStyle = '#0a0a30';
+    bctx.fillRect(0, 80, GAME_W, 40);
+
+    // Stars
+    for (let i = 0; i < 40; i++) {
+        const sx = (i * 73 + 17) % GAME_W;
+        const sy = (i * 31 + 3) % 80;
+        if ((game.frameCount + i * 11) % 40 < 35) {
+            drawPixel(sx, sy, i % 3 === 0 ? '#aaaaff' : '#ffffff');
+        }
+    }
+
+    // Park ground (Oskarsparken)
+    bctx.fillStyle = '#1a3a0a';
+    bctx.fillRect(0, 120, GAME_W, 120);
+    bctx.fillStyle = '#1e4010';
+    bctx.fillRect(0, 120, GAME_W, 3);
+
+    // Trees in background
+    for (let t = 0; t < 6; t++) {
+        const tx = 10 + t * 75;
+        drawRect(tx + 6, 95, 4, 28, '#3a2a1a');
+        drawRect(tx, 82, 16, 16, '#1a4a0a');
+        drawRect(tx + 2, 78, 12, 6, '#226622');
+        drawRect(tx + 4, 75, 8, 5, '#2d5a1e');
+    }
+
+    // === STAGE ===
+    const stageX = 60;
+    const stageW = 280;
+    const stageY = 125;
+
+    // Stage platform
+    drawRect(stageX, stageY, stageW, 8, '#5a3a1a');
+    drawRect(stageX + 2, stageY + 1, stageW - 4, 3, '#6a4a2a');
+    drawRect(stageX, stageY + 8, stageW, 3, '#4a2a0a');
+    // Stage legs
+    drawRect(stageX + 10, stageY + 8, 4, 22, '#4a2a0a');
+    drawRect(stageX + stageW - 14, stageY + 8, 4, 22, '#4a2a0a');
+    drawRect(stageX + stageW/2 - 2, stageY + 8, 4, 22, '#4a2a0a');
+
+    // Stage back wall
+    drawRect(stageX + 5, stageY - 60, stageW - 10, 61, '#111111');
+    drawRect(stageX + 7, stageY - 58, stageW - 14, 57, '#1a1a1a');
+
+    // === BIG "SKRAECKOEDLAN" SIGN ===
+    const signW = 210;
+    const signX = GAME_W/2 - signW/2;
+    const signY = stageY - 58;
+    const glowPhase = game.frameCount % 30 < 15;
+    drawRect(signX - 2, signY - 2, signW + 4, 20, glowPhase ? '#cc4400' : '#ff5500');
+    drawRect(signX, signY, signW, 16, '#000000');
+    drawText('SKRAECKOEDLAN', signX + 14, signY + 2, '#ff6600', 2);
+
+    // === ORANGE SPEAKERS (LEFT) ===
+    const spkLx = stageX + 8;
+    const spkY = stageY - 48;
+    // Top cab
+    drawRect(spkLx, spkY, 34, 18, '#cc6600');
+    drawRect(spkLx + 1, spkY + 1, 32, 16, '#dd7700');
+    drawRect(spkLx + 3, spkY + 3, 12, 12, '#111111');
+    drawRect(spkLx + 19, spkY + 3, 12, 12, '#111111');
+    drawRect(spkLx + 5, spkY + 5, 8, 8, '#222222');
+    drawRect(spkLx + 21, spkY + 5, 8, 8, '#222222');
+    drawPixel(spkLx + 9, spkY + 9, '#333333');
+    drawPixel(spkLx + 25, spkY + 9, '#333333');
+    // Bottom cab
+    drawRect(spkLx, spkY + 18, 34, 24, '#cc6600');
+    drawRect(spkLx + 1, spkY + 19, 32, 22, '#dd7700');
+    drawRect(spkLx + 3, spkY + 21, 12, 8, '#111111');
+    drawRect(spkLx + 19, spkY + 21, 12, 8, '#111111');
+    drawRect(spkLx + 5, spkY + 23, 8, 4, '#222222');
+    drawRect(spkLx + 21, spkY + 23, 8, 4, '#222222');
+    drawRect(spkLx + 3, spkY + 31, 12, 8, '#111111');
+    drawRect(spkLx + 19, spkY + 31, 12, 8, '#111111');
+    drawRect(spkLx + 5, spkY + 33, 8, 4, '#222222');
+    drawRect(spkLx + 21, spkY + 33, 8, 4, '#222222');
+    // "ORANGE" text on speaker
+    drawText('ORANGE', spkLx, spkY + 43, '#ffaa00', 1);
+
+    // === ORANGE SPEAKERS (RIGHT) ===
+    const spkRx = stageX + stageW - 42;
+    drawRect(spkRx, spkY, 34, 18, '#cc6600');
+    drawRect(spkRx + 1, spkY + 1, 32, 16, '#dd7700');
+    drawRect(spkRx + 3, spkY + 3, 12, 12, '#111111');
+    drawRect(spkRx + 19, spkY + 3, 12, 12, '#111111');
+    drawRect(spkRx + 5, spkY + 5, 8, 8, '#222222');
+    drawRect(spkRx + 21, spkY + 5, 8, 8, '#222222');
+    drawPixel(spkRx + 9, spkY + 9, '#333333');
+    drawPixel(spkRx + 25, spkY + 9, '#333333');
+    drawRect(spkRx, spkY + 18, 34, 24, '#cc6600');
+    drawRect(spkRx + 1, spkY + 19, 32, 22, '#dd7700');
+    drawRect(spkRx + 3, spkY + 21, 12, 8, '#111111');
+    drawRect(spkRx + 19, spkY + 21, 12, 8, '#111111');
+    drawRect(spkRx + 5, spkY + 23, 8, 4, '#222222');
+    drawRect(spkRx + 21, spkY + 23, 8, 4, '#222222');
+    drawRect(spkRx + 3, spkY + 31, 12, 8, '#111111');
+    drawRect(spkRx + 19, spkY + 31, 12, 8, '#111111');
+    drawRect(spkRx + 5, spkY + 33, 8, 4, '#222222');
+    drawRect(spkRx + 21, spkY + 33, 8, 4, '#222222');
+    drawText('ORANGE', spkRx, spkY + 43, '#ffaa00', 1);
+
+    // Speaker vibration waves
+    if (game.frameCount % 4 < 2) {
+        for (let sw = 0; sw < 3; sw++) {
+            drawPixel(spkLx - 3 - sw * 2, spkY + 10 + sw * 3, '#ff8800');
+            drawPixel(spkRx + 36 + sw * 2, spkY + 10 + sw * 3, '#ff8800');
+        }
+    }
+
+    // === CACTUSES ON STAGE ===
+    // Cactus 1 (left of band)
+    const cac1x = stageX + 55;
+    const cacY = stageY - 30;
+    drawRect(cac1x, cacY, 5, 26, '#2d5a1e');
+    drawRect(cac1x + 1, cacY + 1, 3, 24, '#3a7a2a');
+    drawRect(cac1x - 5, cacY + 8, 5, 3, '#2d5a1e');
+    drawRect(cac1x - 5, cacY + 4, 2, 7, '#2d5a1e');
+    drawRect(cac1x + 5, cacY + 12, 5, 3, '#2d5a1e');
+    drawRect(cac1x + 8, cacY + 8, 2, 7, '#2d5a1e');
+    drawPixel(cac1x - 1, cacY + 5, '#558833');
+    drawPixel(cac1x + 5, cacY + 10, '#558833');
+    drawPixel(cac1x + 2, cacY - 1, '#558833');
+
+    // Cactus 2 (right of band)
+    const cac2x = stageX + stageW - 68;
+    drawRect(cac2x, cacY + 4, 4, 22, '#2d5a1e');
+    drawRect(cac2x + 1, cacY + 5, 2, 20, '#3a7a2a');
+    drawRect(cac2x - 4, cacY + 12, 4, 3, '#2d5a1e');
+    drawRect(cac2x - 4, cacY + 9, 2, 6, '#2d5a1e');
+    drawRect(cac2x + 4, cacY + 8, 4, 3, '#2d5a1e');
+    drawRect(cac2x + 6, cacY + 5, 2, 6, '#2d5a1e');
+    drawPixel(cac2x - 1, cacY + 10, '#558833');
+    drawPixel(cac2x + 4, cacY + 6, '#558833');
+
+    // Cactus 3 (small, behind drummer)
+    const cac3x = GAME_W/2 + 30;
+    drawRect(cac3x, cacY + 10, 3, 16, '#2d5a1e');
+    drawRect(cac3x + 1, cacY + 11, 1, 14, '#3a7a2a');
+    drawRect(cac3x + 3, cacY + 15, 3, 2, '#2d5a1e');
+    drawRect(cac3x + 4, cacY + 13, 2, 4, '#2d5a1e');
+
+    // === BAND MEMBERS (SKRAECKOEDLAN) ===
+    const bob = Math.sin(game.frameCount * 0.15) * 2;
+    const armSwing = Math.sin(game.frameCount * 0.2) * 3;
+
+    // GUITARIST (left-center) - long hair, beard, black shirt
+    const gx = stageX + 85;
+    const gy = stageY - 26 + Math.floor(bob);
+    drawRect(gx, gy, 12, 5, '#553311');
+    drawRect(gx - 1, gy + 3, 14, 8, '#553311');
+    drawRect(gx + 2, gy + 2, 8, 6, PAL.peach);
+    drawPixel(gx + 4, gy + 4, PAL.black);
+    drawPixel(gx + 7, gy + 4, PAL.black);
+    drawRect(gx + 3, gy + 6, 6, 3, '#443322');
+    drawRect(gx + 1, gy + 10, 10, 8, '#111111');
+    drawRect(gx + 3, gy + 11, 6, 2, '#cc4400');
+    drawRect(gx - 2, gy + 11, 3, 6, PAL.peach);
+    drawRect(gx + 11, gy + 11 + Math.floor(armSwing), 3, 6, PAL.peach);
+    // Guitar
+    drawRect(gx + 2, gy + 13, 8, 5, '#aa3322');
+    drawRect(gx + 10, gy + 14, 10, 2, '#886611');
+    drawPixel(gx + 5, gy + 15, '#ffcc00');
+    drawRect(gx + 2, gy + 18, 3, 6, '#222222');
+    drawRect(gx + 7, gy + 18, 3, 6, '#222222');
+
+    // BASSIST (right-center) - very long black hair, thick beard
+    const bsx = stageX + stageW - 105;
+    const bsy = stageY - 26 + Math.floor(bob * 0.8);
+    drawRect(bsx, bsy, 12, 4, '#222222');
+    drawRect(bsx - 1, bsy + 2, 14, 10, '#222222');
+    drawRect(bsx + 2, bsy + 2, 8, 6, PAL.peach);
+    drawPixel(bsx + 4, bsy + 4, PAL.black);
+    drawPixel(bsx + 7, bsy + 4, PAL.black);
+    drawRect(bsx + 3, bsy + 6, 6, 4, '#111111');
+    drawRect(bsx + 1, bsy + 11, 10, 8, '#1a1a2a');
+    drawRect(bsx + 3, bsy + 12, 6, 2, '#2d5a1e');
+    drawRect(bsx - 2, bsy + 12, 3, 6, PAL.peach);
+    drawRect(bsx + 11, bsy + 12 - Math.floor(armSwing * 0.7), 3, 6, PAL.peach);
+    // Bass guitar
+    drawRect(bsx + 2, bsy + 14, 10, 4, '#5a2a1a');
+    drawRect(bsx + 12, bsy + 15, 12, 2, '#886611');
+    drawRect(bsx + 2, bsy + 19, 3, 6, '#222222');
+    drawRect(bsx + 7, bsy + 19, 3, 6, '#222222');
+
+    // DRUMMER (center back) - hair, beard, behind kit
+    const ddx = GAME_W/2 - 6;
+    const ddy = stageY - 24 + Math.floor(bob * 0.5);
+    // Drum kit
+    drawRect(ddx - 12, stageY - 10, 10, 7, '#666666');
+    drawRect(ddx + 14, stageY - 10, 10, 7, '#666666');
+    drawRect(ddx - 2, stageY - 14, 16, 10, '#555555');
+    drawRect(ddx, stageY - 16, 12, 2, '#777777');
+    drawRect(ddx - 10, stageY - 18, 8, 1, '#ccaa00');
+    drawRect(ddx + 14, stageY - 18, 8, 1, '#ccaa00');
+    drawRect(ddx - 7, stageY - 17, 1, 7, '#555555');
+    drawRect(ddx + 18, stageY - 17, 1, 7, '#555555');
+    // Drummer body
+    drawRect(ddx + 2, ddy, 8, 4, '#443311');
+    drawRect(ddx + 3, ddy + 4, 6, 5, PAL.peach);
+    drawPixel(ddx + 4, ddy + 6, PAL.black);
+    drawPixel(ddx + 7, ddy + 6, PAL.black);
+    drawRect(ddx + 3, ddy + 7, 6, 2, '#553322');
+    drawRect(ddx + 1, ddy + 9, 10, 7, '#111111');
+    // Drumstick arms (animated)
+    const stickAng = Math.floor(Math.sin(game.frameCount * 0.3) * 3);
+    drawRect(ddx - 2, ddy + 10 + stickAng, 3, 2, PAL.peach);
+    drawRect(ddx - 4, ddy + 11 + stickAng, 4, 1, '#DAA520');
+    drawRect(ddx + 11, ddy + 10 - stickAng, 3, 2, PAL.peach);
+    drawRect(ddx + 13, ddy + 11 - stickAng, 4, 1, '#DAA520');
+
+    // === STAGE LIGHTS ===
+    for (let sli = 0; sli < 5; sli++) {
+        const lx = stageX + 30 + sli * 55;
+        if ((game.frameCount + sli * 15) % 40 < 30) {
+            const lc = sli % 2 === 0 ? PAL.red : PAL.blue;
+            drawPixel(lx, stageY - 59, lc);
+            drawPixel(lx + 1, stageY - 59, lc);
+            for (let beam = 0; beam < 6; beam++) {
+                const beamX = lx + Math.floor(beam * (sli < 2 ? 1.5 : -1.5));
+                const beamY = stageY - 57 + beam * 8;
+                if (beamY < stageY) drawPixel(beamX, beamY, lc);
+            }
+        }
+    }
+
+    // === CROWD ===
+    // Row 1 (further away, smaller)
+    for (let ci = 0; ci < 35; ci++) {
+        const cx = 5 + ci * 11.5 + Math.sin(game.frameCount * 0.1 + ci) * 2;
+        const cy = 155 + Math.sin(game.frameCount * 0.15 + ci * 0.7) * 3 + (ci % 2) * 8;
+        const hc = ci % 3 === 0 ? PAL.peach : (ci % 3 === 1 ? '#ddaa88' : '#bb9977');
+        const hairC = ci % 4 === 0 ? '#333333' : (ci % 4 === 1 ? '#664422' : (ci % 4 === 2 ? '#222222' : '#884433'));
+        drawRect(Math.floor(cx), Math.floor(cy), 6, 6, hc);
+        drawRect(Math.floor(cx), Math.floor(cy) - 2, 6, 3, hairC);
+        if ((game.frameCount + ci * 7) % 30 < 15) {
+            drawRect(Math.floor(cx) - 1, Math.floor(cy) - 5, 2, 4, hc);
+            drawRect(Math.floor(cx) + 5, Math.floor(cy) - 4, 2, 3, hc);
+        }
+    }
+    // Row 2 (closer, bigger)
+    for (let ci = 0; ci < 20; ci++) {
+        const cx = 3 + ci * 20 + Math.sin(game.frameCount * 0.12 + ci * 1.3) * 3;
+        const cy = 185 + Math.sin(game.frameCount * 0.13 + ci * 0.9) * 2;
+        const hc = ci % 2 === 0 ? PAL.peach : '#ddaa88';
+        const hairC = ci % 3 === 0 ? '#222222' : '#553322';
+        drawRect(Math.floor(cx), Math.floor(cy), 8, 8, hc);
+        drawRect(Math.floor(cx), Math.floor(cy) - 3, 8, 4, hairC);
+        if ((game.frameCount + ci * 5) % 25 < 12) {
+            drawRect(Math.floor(cx) - 2, Math.floor(cy) - 7, 2, 5, hc);
+            drawRect(Math.floor(cx) + 8, Math.floor(cy) - 6, 2, 4, hc);
+        }
+    }
+    // Crowd base
+    bctx.fillStyle = '#0a0a0a';
+    bctx.fillRect(0, 205, GAME_W, 35);
+    for (let ci = 0; ci < 40; ci++) {
+        const cx = ci * 10 + Math.sin(game.frameCount * 0.08 + ci) * 2;
+        drawRect(Math.floor(cx), 202, 8, 10, ci % 2 === 0 ? '#222222' : '#1a1a1a');
+    }
+
+    // === HUD ===
+    if (game.frameCount % 60 < 45) {
+        drawText('SKRAECKOEDLAN LIVE', GAME_W/2 - 56, 5, '#ff6600', 1);
+    }
+    drawText('OSKARSPARKEN - VÄNNÄSDAGARNA', GAME_W/2 - 86, 15, PAL.green, 1);
+
+    const concertElapsed = 900 - game.cutsceneTimer;
+    if (concertElapsed > 300 && game.frameCount % 50 < 35) {
+        drawText('TRYCK ENTER', GAME_W/2 - 34, GAME_H - 8, PAL.grey, 1);
+    }
+}
+
 function drawVictoryScreen() {
     bctx.fillStyle = '#001a00';
     bctx.fillRect(0, 0, GAME_W, GAME_H);
@@ -6499,46 +7186,44 @@ function drawVictoryScreen() {
     drawText('SEGER!', GAME_W / 2 - 36, 50, PAL.green, 2);
 
     if (game.level === 3) {
-        // Level 3 victory - Riff Raff Ruff defeated
-        drawText('W.IKATTI BESEGRADE', GAME_W / 2 - 56, 80, PAL.white, 1);
-        drawText('RIFF RAFF RUFF!', GAME_W / 2 - 46, 92, PAL.yellow, 1);
+        // Level 3 victory - SKRAECKOEDLAN rocks Vännäsdagarna!
+        drawText('W.IKATTI RÄDDADE', GAME_W / 2 - 50, 80, PAL.white, 1);
+        drawText('VÄNNÄSDAGARNA!', GAME_W / 2 - 44, 92, PAL.yellow, 1);
 
-        // Stage with broken instruments pixel art
+        // Mini stage with SKRAECKOEDLAN
         const cx = GAME_W / 2;
         // Stage platform
-        drawRect(cx - 40, 115, 80, 5, '#553322');
-        drawRect(cx - 38, 113, 76, 3, '#664433');
+        drawRect(cx - 50, 120, 100, 5, '#553322');
+        drawRect(cx - 48, 118, 96, 3, '#664433');
 
-        // Broken guitar (left)
-        drawRect(cx - 28, 105, 2, 10, '#8B4513'); // Neck
-        drawRect(cx - 32, 108, 5, 6, '#DAA520');  // Body
-        drawPixel(cx - 30, 106, '#ffcc00');        // String
-        drawPixel(cx - 29, 107, '#ffcc00');
+        // Mini ORANGE speakers
+        drawRect(cx - 45, 108, 14, 12, '#cc6600');
+        drawRect(cx - 44, 109, 12, 10, '#dd7700');
+        drawRect(cx - 42, 111, 4, 4, '#111111');
+        drawRect(cx - 36, 111, 4, 4, '#111111');
+        drawRect(cx + 31, 108, 14, 12, '#cc6600');
+        drawRect(cx + 32, 109, 12, 10, '#dd7700');
+        drawRect(cx + 34, 111, 4, 4, '#111111');
+        drawRect(cx + 40, 111, 4, 4, '#111111');
 
-        // Broken bass (center)
-        drawRect(cx - 4, 103, 2, 12, '#660000');   // Neck
-        drawRect(cx - 7, 106, 7, 7, '#8B0000');    // Body
-        drawPixel(cx - 3, 104, '#ff4444');          // String
+        // Cactus
+        drawRect(cx - 2, 100, 4, 18, '#2d5a1e');
+        drawRect(cx - 6, 106, 4, 2, '#2d5a1e');
+        drawRect(cx - 6, 103, 2, 5, '#2d5a1e');
+        drawRect(cx + 4, 108, 4, 2, '#2d5a1e');
+        drawRect(cx + 6, 105, 2, 5, '#2d5a1e');
 
-        // Broken drums (right)
-        drawRect(cx + 18, 107, 12, 8, '#444444');   // Drum body
-        drawRect(cx + 17, 106, 14, 2, '#666666');   // Rim top
-        drawRect(cx + 20, 105, 2, 1, '#DAA520');    // Stick 1
-        drawRect(cx + 26, 104, 2, 1, '#DAA520');    // Stick 2
-        // Cymbal (bent)
-        drawRect(cx + 30, 102, 6, 1, '#CCAA00');
-        drawRect(cx + 31, 103, 4, 1, '#AA8800');
+        // Band silhouettes rocking
+        const vBob = Math.sin(game.frameCount * 0.15) * 1;
+        drawRect(cx - 25, 110 + Math.floor(vBob), 6, 10, '#111111');
+        drawRect(cx - 24, 107 + Math.floor(vBob), 4, 4, '#111111');
+        drawRect(cx + 6, 110 + Math.floor(-vBob), 6, 10, '#111111');
+        drawRect(cx + 7, 107 + Math.floor(-vBob), 4, 4, '#111111');
+        drawRect(cx + 20, 110 + Math.floor(vBob * 0.5), 6, 10, '#111111');
+        drawRect(cx + 21, 107 + Math.floor(vBob * 0.5), 4, 4, '#111111');
 
-        // Smoke/dust from destruction
-        for (let s = 0; s < 6; s++) {
-            const smokeX = cx - 30 + s * 12 + Math.sin(game.frameCount * 0.05 + s) * 3;
-            const smokeY = 100 + Math.cos(game.frameCount * 0.04 + s * 1.5) * 3;
-            drawPixel(Math.floor(smokeX), Math.floor(smokeY), '#777777');
-            drawPixel(Math.floor(smokeX) + 1, Math.floor(smokeY), '#666666');
-        }
-
-        drawText('BANDET ÄR KROSSAT!', GAME_W / 2 - 58, 128, PAL.red, 1);
-        drawText('SCENEN ÄR DIN!', GAME_W / 2 - 44, 140, PAL.orange, 1);
+        drawText('SKRAECKOEDLAN', cx - 40, 128, '#ff6600', 1);
+        drawText('ROCKADE VÄNNÄSDAGARNA!', cx - 66, 140, PAL.orange, 1);
 
     } else if (game.level === 2) {
         // Level 2 victory - Kocken defeated
@@ -6610,6 +7295,10 @@ function update() {
             updateEnemies();
             updateParticles();
             if (game.flashTimer > 0) game.flashTimer--;
+            break;
+
+        case 'cutscene':
+            updateCutscene();
             break;
 
         case 'gameover':
@@ -6722,6 +7411,10 @@ function draw() {
 
         case 'gameover':
             drawGameOverScreen();
+            break;
+
+        case 'cutscene':
+            drawCutscene();
             break;
 
         case 'victory':
