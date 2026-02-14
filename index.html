@@ -4027,7 +4027,7 @@ function updatePlayer() {
                 game.level3BossDefeated = true;
                 game.state = 'cutscene';
                 game.cutscenePhase = 'fadeout';
-                game.cutsceneTimer = 120;
+                game.cutsceneTimer = 180;
                 game.highScore = Math.max(game.highScore, game.score);
                 stopMusic();
             }
@@ -6611,11 +6611,11 @@ function updateCutscene() {
         switch (game.cutscenePhase) {
             case 'fadeout':
                 game.cutscenePhase = 'medborgarhuset';
-                game.cutsceneTimer = 420;
+                game.cutsceneTimer = 720;
                 break;
             case 'medborgarhuset':
                 game.cutscenePhase = 'concert_intro';
-                game.cutsceneTimer = 180;
+                game.cutsceneTimer = 300;
                 playSkraeckoedlanMusic();
                 break;
             case 'concert_intro':
@@ -6649,7 +6649,7 @@ function drawCutscene() {
 function drawCutsceneFadeout() {
     bctx.fillStyle = '#000000';
     bctx.fillRect(0, 0, GAME_W, GAME_H);
-    const progress = 1 - (game.cutsceneTimer / 120);
+    const progress = 1 - (game.cutsceneTimer / 180);
     if (progress > 0.3) {
         drawText('BANDET ÄR KROSSAT!', GAME_W/2 - 58, GAME_H/2 - 20, PAL.red, 1);
     }
@@ -6752,9 +6752,9 @@ function drawCutsceneMedborgarhuset() {
 
     // Player W.IKATTI walks in from left (first ~60 frames)
     const playerTargetX = bx + 20;
-    const px = Math.min(elapsed * 2, playerTargetX);
+    const px = Math.min(elapsed * 1.2, playerTargetX);
     const py = GAME_H - 68;
-    const walkFrame = elapsed < 60 ? Math.floor(elapsed / 6) % 4 : 0;
+    const walkFrame = elapsed < 100 ? Math.floor(elapsed / 6) % 4 : 0;
 
     // W.IKATTI sprite
     drawRect(px + 2, py, 10, 3, '#444444');
@@ -6776,8 +6776,8 @@ function drawCutsceneMedborgarhuset() {
     drawRect(px + 2, py + 22, 4, 2, '#111111');
     drawRect(px + 7, py + 22, 4, 2, '#111111');
 
-    // Näringslivsplaneraren appears at door after 90 frames
-    if (elapsed > 90) {
+    // Näringslivsplaneraren appears at door after 140 frames
+    if (elapsed > 140) {
         const npx = bx + 70;
         const npy = GAME_H - 68;
         // Hair
@@ -6816,18 +6816,18 @@ function drawCutsceneMedborgarhuset() {
     drawRect(6, dialogueY, GAME_W - 12, 30, '#111122');
     drawRect(6, dialogueY, GAME_W - 12, 2, '#333355');
 
-    if (elapsed < 120) {
+    if (elapsed < 160) {
         drawText('...', GAME_W/2 - 10, dialogueY + 10, PAL.grey, 1);
-    } else if (elapsed < 200) {
+    } else if (elapsed < 280) {
         drawText('W.IKATTI:', 12, dialogueY + 4, PAL.green, 1);
         drawText('RIFF RAFF RUFF ÄR BORTA!', 12, dialogueY + 16, PAL.white, 1);
-    } else if (elapsed < 260) {
+    } else if (elapsed < 400) {
         drawText('W.IKATTI:', 12, dialogueY + 4, PAL.green, 1);
         drawText('VI BEHÖVER ETT RIKTIGT BAND!', 12, dialogueY + 16, PAL.white, 1);
-    } else if (elapsed < 320) {
+    } else if (elapsed < 500) {
         drawText('NÄRINGSLIVSPLANERAREN:', 12, dialogueY + 4, PAL.orange, 1);
         drawText('HMMMM...', 12, dialogueY + 16, PAL.white, 1);
-    } else if (elapsed < 380) {
+    } else if (elapsed < 620) {
         drawText('NÄRINGSLIVSPLANERAREN:', 12, dialogueY + 4, PAL.orange, 1);
         drawText('JAG RINGER SKRAECKOEDLAN!', 12, dialogueY + 16, PAL.yellow, 1);
     } else {
@@ -6840,7 +6840,7 @@ function drawCutsceneConcertIntro() {
     bctx.fillStyle = '#000000';
     bctx.fillRect(0, 0, GAME_W, GAME_H);
 
-    const progress = 1 - (game.cutsceneTimer / 180);
+    const progress = 1 - (game.cutsceneTimer / 300);
 
     if (progress > 0.1) {
         // Fire glow around text
