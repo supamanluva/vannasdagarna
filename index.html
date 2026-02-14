@@ -1556,6 +1556,7 @@ const game = {
     bullets: [],
     dogPoops: [],
     discProjectiles: [],
+    puckProjectiles: [],
     flashTimer: 0,
     flashColor: '',
     bossActive: false,
@@ -1601,6 +1602,8 @@ const player = {
     hasGun: false,
     ammo: 0,
     shootCooldown: 0,
+    hasBat: false,
+    batDurability: 0,
 };
 
 let enemies = [];
@@ -1643,6 +1646,8 @@ function initLevel() {
     player.hasGun = false;
     player.ammo = 0;
     player.shootCooldown = 0;
+    player.hasBat = false;
+    player.batDurability = 0;
 
     // Buildings placement
     buildings = [
@@ -1779,8 +1784,8 @@ function initLevel() {
         });
     });
 
-    // Ammo pickups (more frequent)
-    const ammoPositions = [350, 700, 1000, 1350, 1700, 2000, 2400, 2750, 3100, 3400, 3800, 4100, 4400];
+    // Ammo pickups (less frequent)
+    const ammoPositions = [700, 1350, 2000, 2750, 3400, 4100];
     ammoPositions.forEach(ax => {
         pickups.push({
             type: 'ammo',
@@ -1790,6 +1795,11 @@ function initLevel() {
             h: 6,
             active: true,
         });
+    });
+
+    // Baseball bat pickups
+    [500, 1800, 3200, 4300].forEach(bx => {
+        pickups.push({ type: 'bat', x: bx, y: GAME_H - 44, w: 10, h: 10, active: true });
     });
 }
 
@@ -1911,10 +1921,15 @@ function initLevel2() {
     pickups.push({ type: 'gun', x: 100, y: GAME_H - 44, w: 10, h: 6, active: true });
     pickups.push({ type: 'gun', x: 1050, y: GAME_H - 44, w: 10, h: 6, active: true });
 
-    // Ammo pickups
-    const ammoPos2 = [250, 480, 720, 960, 1250, 1480, 1720, 1960];
+    // Ammo pickups (reduced)
+    const ammoPos2 = [480, 960, 1480, 1720, 1960];
     ammoPos2.forEach(ax => {
         pickups.push({ type: 'ammo', x: ax, y: GAME_H - 40, w: 6, h: 6, active: true });
+    });
+
+    // Baseball bat pickups
+    [300, 1200, 1800].forEach(bx => {
+        pickups.push({ type: 'bat', x: bx, y: GAME_H - 44, w: 10, h: 10, active: true });
     });
 }
 
@@ -2356,6 +2371,7 @@ function initLevel3() {
     game.bullets = [];
     game.dogPoops = [];
     game.discProjectiles = [];
+    game.puckProjectiles = [];
     game.bossActive = false;
     game.bossDefeated = false;
     game.bossIntroTimer = 0;
@@ -2427,7 +2443,7 @@ function initLevel3() {
 
     // === STREET ENEMIES: More drunks in the residential area ===
     const streetDrunks = [
-        { x: 1000 }, { x: 1200 }, { x: 1400 }, { x: 1600 },
+        { x: 1000 }, { x: 1200 }, { x: 1600 },
         { x: 1800 }, { x: 2000 },
     ];
     streetDrunks.forEach(sp => {
@@ -2440,6 +2456,37 @@ function initLevel3() {
             frame: 0, active: true, puking: false,
             pukeTimer: 60 + Math.random() * 120,
             wobbleTimer: 0, flashTimer: 0,
+        });
+    });
+
+    // === STREET ENEMIES: Skateboarders ===
+    [{ x: 1100 }, { x: 1500 }, { x: 1900 }].forEach(sp => {
+        enemies.push({
+            type: 'skater',
+            x: sp.x, y: GAME_H - 40,
+            w: 18, h: 20,
+            hp: 25, maxHp: 25,
+            speed: 2.0 + Math.random() * 0.8,
+            dir: Math.random() > 0.5 ? 1 : -1,
+            frame: 0, active: true, flashTimer: 0,
+            homeX: sp.x,
+            trickTimer: 0,
+        });
+    });
+
+    // === STREET ENEMIES: BMX riders ===
+    [{ x: 1300 }, { x: 1700 }, { x: 2100 }].forEach(sp => {
+        enemies.push({
+            type: 'bmx',
+            x: sp.x, y: GAME_H - 42,
+            w: 22, h: 22,
+            hp: 35, maxHp: 35,
+            speed: 2.5 + Math.random() * 0.5,
+            dir: Math.random() > 0.5 ? 1 : -1,
+            frame: 0, active: true, flashTimer: 0,
+            homeX: sp.x,
+            chargeTimer: 60 + Math.random() * 60,
+            charging: false,
         });
     });
 
@@ -2475,6 +2522,39 @@ function initLevel3() {
             dir: Math.random() > 0.5 ? 1 : -1, frame: 0, active: true,
             flashTimer: 0, poopTimer: 80 + Math.random() * 100,
             pooping: false, poopDuration: 0,
+        });
+    });
+
+    // === ISHALL ENEMIES: Hockey players with puck shots ===
+    [{ x: 3300 }, { x: 3450 }, { x: 3600 }].forEach(sp => {
+        enemies.push({
+            type: 'hockey',
+            x: sp.x, y: GAME_H - 48,
+            w: 18, h: 18,
+            hp: 40, maxHp: 40,
+            speed: 0.6 + Math.random() * 0.4,
+            dir: Math.random() > 0.5 ? 1 : -1,
+            frame: 0, active: true, flashTimer: 0,
+            shootTimer: 70 + Math.random() * 50,
+            shooting: false,
+            shootAnim: 0,
+        });
+    });
+
+    // === POND ENEMIES: Angry swans ===
+    [{ x: 3900 }, { x: 4100 }, { x: 4300 }, { x: 4500 }].forEach(sp => {
+        enemies.push({
+            type: 'swan',
+            x: sp.x, y: GAME_H - 70 - Math.random() * 30,
+            w: 20, h: 14,
+            hp: 20, maxHp: 20,
+            speed: 1.2 + Math.random() * 0.6,
+            dir: Math.random() > 0.5 ? 1 : -1,
+            frame: 0, active: true, flashTimer: 0,
+            swoopTimer: 50 + Math.random() * 40,
+            swooping: false,
+            swoopTarget: 0,
+            baseY: GAME_H - 70 - Math.random() * 30,
         });
     });
 
@@ -2517,13 +2597,18 @@ function initLevel3() {
     });
 
     // Gun pickups
-    [300, 1300, 2500, 3600].forEach(gx => {
+    [300, 2500, 3600].forEach(gx => {
         pickups.push({ type: 'gun', x: gx, y: GAME_H - 44, w: 10, h: 6, active: true });
     });
 
-    // Ammo pickups
-    [200, 500, 800, 1100, 1400, 1700, 2000, 2400, 2800, 3200, 3600, 4000, 4400, 4800].forEach(ax => {
+    // Ammo pickups (reduced)
+    [500, 1100, 1700, 2400, 3200, 4000, 4800].forEach(ax => {
         pickups.push({ type: 'ammo', x: ax, y: GAME_H - 40, w: 6, h: 6, active: true });
+    });
+
+    // Baseball bat pickups
+    [950, 1600, 2200, 3400, 4200].forEach(bx => {
+        pickups.push({ type: 'bat', x: bx, y: GAME_H - 44, w: 10, h: 10, active: true });
     });
 }
 
@@ -3273,6 +3358,147 @@ function getDiscGolferSprite(frame, throwing) {
     ];
 }
 
+// Skateboarder enemy sprite
+function getSkaterSprite(frame) {
+    const _ = null;
+    const Sk = PAL.peach;
+    const sh = '#cc9977';
+    const Ey = PAL.black;
+    const Cp = '#cc2222'; // Red cap backwards
+    const Ts = '#2244aa'; // Blue t-shirt
+    const Td = '#1a3388';
+    const Pn = '#554433'; // Khaki shorts
+    const Bt = '#ff4444'; // Red shoes
+    const Bd = '#aaaaaa'; // Board
+    const Wh = '#444444'; // Wheels
+    const lean = frame % 40 < 20 ? 0 : 1;
+    return [
+        [_,_,Cp,Cp,Cp,Cp,_,_,_,_],
+        [_,_,Cp,Cp,Sk,Sk,Sk,_,_,_],
+        [_,_,_,Sk,Sk,Sk,Sk,_,_,_],
+        [_,_,_,sh,Ey,Sk,Ey,_,_,_],
+        [_,_,Sk,Ts,Ts,Ts,Ts,Sk,_,_],
+        [_,_,_,Td,Ts,Ts,Td,_,_,_],
+        [_,_,_,Pn,Pn,Pn,_,_,_,_],
+        [_,_,_,Bt,_,_,Bt,_,_,_],
+        [_,Wh,Bd,Bd,Bd,Bd,Bd,Bd,Wh,_],
+        [_,Wh,_,_,_,_,_,_,Wh,_],
+    ];
+}
+
+// BMX rider enemy sprite
+function getBMXSprite(frame) {
+    const _ = null;
+    const Sk = PAL.peach;
+    const sh = '#cc9977';
+    const Ey = PAL.black;
+    const Hl = '#ffcc00'; // Helmet yellow
+    const Hd = '#ddaa00';
+    const Ts = '#222222'; // Dark shirt
+    const Pn = '#333344'; // Jeans
+    const Bt = '#222222'; // Shoes
+    const Fr = '#888888'; // Frame
+    const Fd = '#666666';
+    const Wh = '#555555'; // Wheel rim
+    const Sp = '#aaaaaa'; // Spokes
+    const Hb = '#444444'; // Handlebar
+    return [
+        [_,_,_,Hl,Hl,Hl,_,_,_,_,_,_],
+        [_,_,Hl,Hd,Hd,Hl,_,_,_,_,_,_],
+        [_,_,Sk,Sk,Sk,Sk,_,_,_,_,_,_],
+        [_,_,sh,Ey,Sk,Ey,_,_,Hb,_,_,_],
+        [_,_,Sk,Ts,Ts,Ts,Sk,Sk,Hb,_,_,_],
+        [_,_,_,Ts,Ts,Ts,_,_,_,_,_,_],
+        [_,_,_,Pn,_,Pn,_,_,_,_,_,_],
+        [_,_,Bt,Pn,_,Pn,Bt,_,_,_,_,_],
+        [_,Wh,Sp,Wh,Fr,Fr,Fr,Wh,Sp,Wh,_,_],
+        [Wh,Sp,_,Sp,Wh,_,Wh,Sp,_,Sp,Wh,_],
+        [_,Wh,Sp,Wh,_,_,_,Wh,Sp,Wh,_,_],
+    ];
+}
+
+// Hockey player enemy sprite
+function getHockeyPlayerSprite(frame, shooting) {
+    const _ = null;
+    const Sk = PAL.peach;
+    const sh = '#cc9977';
+    const Ey = PAL.black;
+    const Hl = '#cccccc'; // Hockey helmet
+    const Hd = '#aaaaaa';
+    const Gd = '#222288'; // Jersey (blue/gold - Vännäs Hockey)
+    const Gs = '#4444aa';
+    const Pn = '#222244'; // Hockey pants
+    const Sk2 = '#dddddd'; // Skates
+    const St = '#886611'; // Stick
+    const Sd = '#aa8822';
+    if (shooting) {
+        return [
+            [_,_,Hl,Hl,Hl,Hl,_,_,_,_,_],
+            [_,_,Hd,Hl,Hl,Hd,_,_,_,_,_],
+            [_,_,Sk,Sk,Sk,Sk,_,_,_,_,_],
+            [_,_,sh,Ey,Sk,Ey,_,_,_,_,_],
+            [_,Sk,Gd,Gd,Gd,Gd,Sk,St,St,St,St],
+            [_,_,Gs,Gd,Gd,Gs,_,_,_,_,_],
+            [_,_,Pn,Pn,Pn,Pn,_,_,_,_,_],
+            [_,_,Pn,_,_,Pn,_,_,_,_,_],
+            [_,Sk2,Sk2,_,_,Sk2,Sk2,_,_,_,_],
+        ];
+    }
+    return [
+        [_,_,Hl,Hl,Hl,Hl,_,_,_],
+        [_,_,Hd,Hl,Hl,Hd,_,_,_],
+        [_,_,Sk,Sk,Sk,Sk,_,_,_],
+        [_,_,sh,Ey,Sk,Ey,_,_,_],
+        [_,Sk,Gd,Gd,Gd,Gd,Sk,_,_],
+        [_,_,Gs,Gd,Gd,Gs,_,_,_],
+        [_,_,Pn,Pn,Pn,Pn,_,_,_],
+        [_,_,Pn,_,_,Pn,_,_,_],
+        [_,Sk2,Sk2,_,_,Sk2,Sk2,_,_],
+        [_,_,_,_,_,_,_,St,St],
+    ];
+}
+
+// Swan enemy sprite (angry swan)
+function getSwanSprite(frame, attacking) {
+    const _ = null;
+    const Wh = PAL.white;
+    const Wd = '#dddddd';
+    const Bk = '#ff6600'; // Beak orange
+    const Ey = PAL.black;
+    const Wg = '#cccccc'; // Wing shade
+    const wingUp = frame % 16 < 8;
+    if (attacking) {
+        // Attack pose - neck forward, wings spread
+        return [
+            [_,_,_,_,_,_,_,_,Ey,Bk,Bk],
+            [_,_,_,_,_,_,_,Wh,Wh,Bk,_],
+            [_,_,_,_,_,_,Wh,Wh,_,_,_],
+            [Wg,_,_,_,Wh,Wh,Wh,_,_,_,_],
+            [Wg,Wg,Wh,Wh,Wh,Wh,Wh,_,_,_,_],
+            [_,Wh,Wh,Wd,Wh,Wh,_,_,_,_,_],
+            [_,_,Wh,Wh,Wh,_,_,_,_,_,_],
+        ];
+    }
+    if (wingUp) {
+        return [
+            [_,Ey,Bk,_,_,_,_,_,_],
+            [Wh,Wh,_,_,_,_,_,_,_],
+            [_,Wh,Wh,_,_,_,Wg,Wg,_],
+            [_,_,Wh,Wh,Wh,Wg,Wg,_,_],
+            [_,_,Wh,Wd,Wh,Wh,_,_,_],
+            [_,_,_,Wh,Wh,_,_,_,_],
+        ];
+    }
+    return [
+        [_,Ey,Bk,_,_,_,_,_,_],
+        [Wh,Wh,_,_,_,_,_,_,_],
+        [_,Wh,Wh,_,_,_,_,_,_],
+        [_,_,Wh,Wh,Wh,Wh,Wg,_,_],
+        [_,_,Wh,Wd,Wh,Wh,_,_,_],
+        [_,_,_,Wh,Wh,_,_,_,_],
+    ];
+}
+
 // Band member sprites for Riff Raff Ruff
 function getBandMemberSprite(role, frame, angry) {
     const _ = null;
@@ -3403,6 +3629,14 @@ function drawHUDLevel3() {
             drawPixel(20 + ai * 3, 36, '#ccaa44');
             drawPixel(20 + ai * 3, 37, '#aa8833');
         }
+    }
+
+    // Bat indicator
+    if (player.hasBat) {
+        const batY = player.hasGun ? 40 : 28;
+        drawRect(4, batY, 4, 10, '#b8860b');
+        drawRect(3, batY, 6, 4, '#d4a020');
+        drawText(String(player.batDurability), 12, batY + 2, player.batDurability > 5 ? '#d4a020' : PAL.red, 1);
     }
 
     // Boss warning approaching Röda Viken stage
@@ -3693,20 +3927,31 @@ function updatePlayer() {
 
     // Attack hitbox check
     if (player.attacking && player.attackTimer === 10) {
+        // Baseball bat gives wider reach and more damage
+        const batBonus = player.hasBat ? 1 : 0;
         const attackBox = {
-            x: player.facing > 0 ? player.x + 12 : player.x - 14,
-            y: player.y + 2,
-            w: 14,
-            h: 10,
+            x: player.facing > 0 ? player.x + 12 : player.x - (14 + batBonus * 10),
+            y: player.y + 2 - batBonus * 2,
+            w: 14 + batBonus * 10,
+            h: 10 + batBonus * 4,
         };
 
         enemies.forEach(e => {
             if (!e.active) return;
             if (boxOverlap(attackBox, e)) {
-                const dmg = 8 + player.combo * 2;
+                const batDmg = player.hasBat ? 6 : 0;
+                const dmg = 8 + player.combo * 2 + batDmg;
                 e.hp -= dmg;
                 e.flashTimer = 6;
                 sfxHit();
+                if (player.hasBat) {
+                    playTone(180, 0.08, 'square', 0.05); // Bat crack sound
+                    player.batDurability--;
+                    if (player.batDurability <= 0) {
+                        player.hasBat = false;
+                        playTone(100, 0.15, 'sawtooth', 0.08);
+                    }
+                }
                 player.combo++;
                 player.comboTimer = 60;
 
@@ -3723,6 +3968,19 @@ function updatePlayer() {
                 if (e.type === 'discgolfer') {
                     e.x += player.facing * 6;
                 }
+                if (e.type === 'skater') {
+                    e.x += player.facing * 12;
+                }
+                if (e.type === 'bmx') {
+                    e.x += player.facing * 8;
+                }
+                if (e.type === 'hockey') {
+                    e.x += player.facing * 6;
+                }
+                if (e.type === 'swan') {
+                    e.x += player.facing * 10;
+                    e.y -= 5; // Knock upward
+                }
                 if (e.type === 'boss') {
                     e.x += player.facing * 3;
                     e.stunTimer = 8;
@@ -3730,7 +3988,7 @@ function updatePlayer() {
 
                 if (e.hp <= 0) {
                     e.active = false;
-                    const scoreVal = e.type === 'boss' ? 1000 : (e.type === 'epa' ? 200 : (e.type === 'discgolfer' ? 150 : (e.type === 'dog' ? 80 : 100)));
+                    const scoreVal = e.type === 'boss' ? 1000 : (e.type === 'epa' ? 200 : (e.type === 'discgolfer' ? 150 : (e.type === 'skater' ? 120 : (e.type === 'bmx' ? 150 : (e.type === 'hockey' ? 180 : (e.type === 'swan' ? 100 : (e.type === 'dog' ? 80 : 100)))))));
                     game.score += scoreVal;
                     spawnParticles(e.x + e.w / 2, e.y + e.h / 2, PAL.orange, 12, 4);
                     spawnParticles(e.x + e.w / 2, e.y + e.h / 2, PAL.red, 8, 3);
@@ -3825,7 +4083,7 @@ function updatePlayer() {
                 game.flashColor = PAL.green;
             } else if (p.type === 'gun') {
                 player.hasGun = true;
-                player.ammo += 12;
+                player.ammo += 8;
                 game.score += 100;
                 sfxGunPickup();
                 spawnParticles(p.x, p.y, PAL.yellow, 8, 3);
@@ -3835,15 +4093,25 @@ function updatePlayer() {
                 game.gunMessageTimer = 180; // Show shoot instruction for 3 seconds
             } else if (p.type === 'ammo') {
                 if (player.hasGun) {
-                    player.ammo += 6;
+                    player.ammo += 3;
                 } else {
-                    player.ammo += 6;
+                    player.ammo += 3;
                 }
                 game.score += 25;
                 sfxAmmoPickup();
                 spawnParticles(p.x, p.y, PAL.orange, 4, 2);
                 game.flashTimer = 3;
                 game.flashColor = PAL.orange;
+            } else if (p.type === 'bat') {
+                player.hasBat = true;
+                player.batDurability = 20; // 20 hits before it breaks
+                game.score += 75;
+                sfxPickup();
+                spawnParticles(p.x, p.y, '#8B6914', 6, 3);
+                spawnParticles(p.x, p.y, PAL.yellow, 4, 2);
+                game.flashTimer = 6;
+                game.flashColor = '#8B6914';
+                game.gunMessageTimer = 120;
             }
         }
     });
@@ -4115,6 +4383,247 @@ function updateEnemies() {
             game.discProjectiles.splice(i, 1);
         }
     }
+
+    // Update skaters (level 3 streets)
+    enemies.forEach(e => {
+        if (e.type !== 'skater' || !e.active) return;
+        if (e.x > game.camX + GAME_W + 80 || e.x < game.camX - 80) return;
+        e.frame++;
+
+        // Fast skating back and forth
+        e.x += e.dir * e.speed;
+        // Reverse when far from home
+        if (Math.abs(e.x - e.homeX) > 200) e.dir *= -1;
+        if (e.x < 900) { e.dir = 1; } // Keep in streets area
+        if (e.x > 2200) { e.dir = -1; }
+
+        // Trick timer (occasional jump)
+        e.trickTimer--;
+        if (e.trickTimer <= 0) {
+            e.trickTimer = 80 + Math.random() * 60;
+        }
+
+        // Contact damage - fast collision
+        if (boxOverlap(player, e)) {
+            const playerBottom = player.y + player.h;
+            const eTop = e.y;
+            const isFalling = player.vy > 0;
+            const isAbove = playerBottom < eTop + 6;
+            if (isFalling && isAbove) {
+                player.vy = -4;
+                player.grounded = false;
+                e.hp -= 12;
+                e.flashTimer = 6;
+                sfxStomp();
+                game.score += 20;
+                spawnParticles(e.x + e.w/2, e.y, PAL.yellow, 5, 2);
+                if (e.hp <= 0) {
+                    e.active = false;
+                    game.score += 120;
+                    spawnParticles(e.x + e.w/2, e.y + e.h/2, PAL.orange, 8, 3);
+                    sfxDeath();
+                }
+            } else if (player.invincible <= 0) {
+                hurtPlayer(10);
+            }
+        }
+    });
+
+    // Update BMX riders (level 3 streets)
+    enemies.forEach(e => {
+        if (e.type !== 'bmx' || !e.active) return;
+        if (e.x > game.camX + GAME_W + 80 || e.x < game.camX - 80) return;
+        e.frame++;
+
+        // Charge at player periodically
+        e.chargeTimer--;
+        if (e.chargeTimer <= 0 && !e.charging) {
+            e.charging = true;
+            e.dir = player.x > e.x ? 1 : -1;
+            e.chargeTimer = 80;
+        }
+        if (e.charging) {
+            e.x += e.dir * e.speed * 1.5;
+            e.chargeTimer--;
+            if (e.chargeTimer <= 0) {
+                e.charging = false;
+                e.chargeTimer = 60 + Math.random() * 50;
+            }
+        } else {
+            // Cruise around
+            e.x += e.dir * e.speed * 0.4;
+            if (Math.abs(e.x - e.homeX) > 250) e.dir *= -1;
+        }
+        if (e.x < 900) { e.dir = 1; }
+        if (e.x > 2200) { e.dir = -1; }
+
+        // Contact damage
+        if (boxOverlap(player, e)) {
+            const playerBottom = player.y + player.h;
+            const eTop = e.y;
+            const isFalling = player.vy > 0;
+            const isAbove = playerBottom < eTop + 6;
+            if (isFalling && isAbove) {
+                player.vy = -4.5;
+                player.grounded = false;
+                e.hp -= 12;
+                e.flashTimer = 6;
+                sfxStomp();
+                game.score += 25;
+                spawnParticles(e.x + e.w/2, e.y, PAL.yellow, 6, 3);
+                if (e.hp <= 0) {
+                    e.active = false;
+                    game.score += 150;
+                    spawnParticles(e.x + e.w/2, e.y + e.h/2, PAL.orange, 10, 4);
+                    sfxDeath();
+                }
+            } else if (player.invincible <= 0) {
+                hurtPlayer(e.charging ? 15 : 10);
+            }
+        }
+    });
+
+    // Update hockey players (level 3 ishall)
+    enemies.forEach(e => {
+        if (e.type !== 'hockey' || !e.active) return;
+        if (e.x > game.camX + GAME_W + 60 || e.x < game.camX - 60) return;
+        e.frame++;
+
+        // Face player
+        e.dir = player.x < e.x ? -1 : 1;
+
+        // Patrol slowly
+        e.x += Math.sin(e.frame * 0.03) * 0.4;
+
+        // Shoot pucks
+        e.shootTimer--;
+        if (e.shootTimer <= 0 && !e.shooting) {
+            e.shooting = true;
+            e.shootAnim = 18;
+            const shootDir = player.x < e.x ? -1 : 1;
+            game.puckProjectiles.push({
+                x: e.x + (shootDir > 0 ? 18 : -8),
+                y: e.y + 8,
+                vx: shootDir * 4,
+                vy: -0.5 + Math.random() * 0.3,
+                w: 6, h: 4,
+                life: 100,
+            });
+            playTone(300, 0.06, 'square', 0.04); // Slap shot sound
+        }
+        if (e.shooting) {
+            e.shootAnim--;
+            if (e.shootAnim <= 0) {
+                e.shooting = false;
+                e.shootTimer = 55 + Math.random() * 40;
+            }
+        }
+
+        // Contact damage
+        if (boxOverlap(player, e)) {
+            const playerBottom = player.y + player.h;
+            const eTop = e.y;
+            const isFalling = player.vy > 0;
+            const isAbove = playerBottom < eTop + 6;
+            if (isFalling && isAbove) {
+                player.vy = -4;
+                player.grounded = false;
+                e.hp -= 12;
+                e.flashTimer = 6;
+                sfxStomp();
+                game.score += 25;
+                spawnParticles(e.x + e.w/2, e.y, PAL.yellow, 5, 2);
+                if (e.hp <= 0) {
+                    e.active = false;
+                    game.score += 180;
+                    spawnParticles(e.x + e.w/2, e.y + e.h/2, PAL.orange, 8, 3);
+                    sfxDeath();
+                }
+            } else if (player.invincible <= 0) {
+                hurtPlayer(10);
+            }
+        }
+    });
+
+    // Update puck projectiles
+    for (let i = game.puckProjectiles.length - 1; i >= 0; i--) {
+        const p = game.puckProjectiles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.life--;
+        if (p.life <= 0 || p.x < game.camX - 20 || p.x > game.camX + GAME_W + 20) {
+            game.puckProjectiles.splice(i, 1);
+            continue;
+        }
+        if (player.invincible <= 0 && boxOverlap(player, p)) {
+            hurtPlayer(14);
+            spawnParticles(p.x, p.y, '#222222', 4, 2);
+            game.puckProjectiles.splice(i, 1);
+        }
+    }
+
+    // Update swans (level 3 pond area)
+    enemies.forEach(e => {
+        if (e.type !== 'swan' || !e.active) return;
+        if (e.x > game.camX + GAME_W + 80 || e.x < game.camX - 80) return;
+        e.frame++;
+
+        e.swoopTimer--;
+        if (e.swoopTimer <= 0 && !e.swooping) {
+            // Start swoop attack toward player
+            e.swooping = true;
+            e.swoopTarget = 0;
+            e.dir = player.x > e.x ? 1 : -1;
+        }
+
+        if (e.swooping) {
+            // Dive toward player then rise back up
+            e.swoopTarget++;
+            e.x += e.dir * e.speed * 1.5;
+            if (e.swoopTarget < 30) {
+                e.y += 1.5; // Dive down
+            } else {
+                e.y -= 1.5; // Rise up
+            }
+            if (e.swoopTarget >= 60) {
+                e.swooping = false;
+                e.swoopTimer = 40 + Math.random() * 30;
+                e.y = e.baseY;
+            }
+        } else {
+            // Fly around lazily
+            e.x += Math.sin(e.frame * 0.03) * 0.8;
+            e.y = e.baseY + Math.sin(e.frame * 0.05) * 5;
+        }
+        // Keep in pond area
+        if (e.x < 3800) e.x = 3800;
+        if (e.x > 5100) e.x = 5100;
+
+        // Contact damage
+        if (boxOverlap(player, e)) {
+            const playerBottom = player.y + player.h;
+            const eTop = e.y;
+            const isFalling = player.vy > 0;
+            const isAbove = playerBottom < eTop + 4;
+            if (isFalling && isAbove) {
+                player.vy = -3.5;
+                player.grounded = false;
+                e.hp -= 10;
+                e.flashTimer = 6;
+                sfxStomp();
+                game.score += 15;
+                spawnParticles(e.x + e.w/2, e.y, PAL.white, 5, 2);
+                if (e.hp <= 0) {
+                    e.active = false;
+                    game.score += 100;
+                    spawnParticles(e.x + e.w/2, e.y + e.h/2, PAL.white, 8, 3);
+                    sfxDeath();
+                }
+            } else if (player.invincible <= 0) {
+                hurtPlayer(8);
+            }
+        }
+    });
 
     // Update boss
     enemies.forEach(e => {
@@ -4821,6 +5330,33 @@ function drawPlayer() {
         drawRect(gunX + 2, gunY + 2, 2, 2, '#3a2a1a');
     }
 
+    // Baseball bat in hand
+    if (player.hasBat && !player.attacking) {
+        const batX = player.facing > 0 ? px + 20 : px - 10;
+        const batY = py + 6;
+        // Bat shaft
+        drawRect(batX, batY, 2, 14, '#b8860b');
+        drawRect(batX + 1, batY, 1, 14, '#d4a020');
+        // Bat barrel (thicker top)
+        drawRect(batX - 1, batY, 4, 5, '#d4a020');
+        drawRect(batX, batY + 1, 2, 3, '#e8c040');
+        // Grip tape
+        drawRect(batX, batY + 11, 2, 3, '#222222');
+    }
+
+    // Bat swing effect
+    if (player.hasBat && player.attacking && player.attackTimer > 6) {
+        const swooshX = player.facing > 0 ? px + 26 : px - 16;
+        const swooshPhase = 12 - player.attackTimer;
+        // Bigger swoosh for bat
+        bctx.fillStyle = 'rgba(200,160,50,0.5)';
+        for (let s = 0; s < 5; s++) {
+            const sy2 = py + 4 + s * 4 - swooshPhase;
+            const sw = 6 + swooshPhase * 2;
+            bctx.fillRect(swooshX + (player.facing > 0 ? swooshPhase : -swooshPhase - sw + 6), sy2, sw, 2);
+        }
+    }
+
     // Muzzle flash when shooting
     if (player.hasGun && player.shootCooldown > 12) {
         const mfx = player.facing > 0 ? px + 30 : px - 10;
@@ -4830,8 +5366,8 @@ function drawPlayer() {
         drawPixel(mfx + (player.facing > 0 ? 5 : -3), mfy + 1, PAL.orange);
     }
 
-    // Attack swoosh effect
-    if (player.attacking && player.attackTimer > 6) {
+    // Attack swoosh effect (fist only, bat has its own effect)
+    if (!player.hasBat && player.attacking && player.attackTimer > 6) {
         const swooshX = player.facing > 0 ? px + 28 : px - 12;
         const swooshPhase = 12 - player.attackTimer;
         bctx.fillStyle = 'rgba(255,255,200,0.4)';
@@ -5012,6 +5548,129 @@ function drawEnemies() {
                 drawRect(sx, sy - 14, e.w, 3, PAL.black);
                 drawRect(sx, sy - 13, e.w, 2, '#330000');
                 drawRect(sx, sy - 13, Math.floor(e.w * e.hp / e.maxHp), 2, PAL.green);
+            }
+        }
+
+        // SKATER RENDERING
+        if (e.type === 'skater') {
+            const skaterSprite = getSkaterSprite(e.frame);
+            const flipSkater = e.dir < 0;
+            drawSprite2x(skaterSprite, sx, sy, flipSkater);
+
+            // Speed lines when moving fast
+            if (Math.abs(e.speed) > 1.5) {
+                const trailDir = e.dir > 0 ? -1 : 1;
+                for (let sl = 0; sl < 3; sl++) {
+                    drawRect(sx + trailDir * (sl * 5 + 5) + (e.dir > 0 ? 0 : e.w), sy + 8 + sl * 3, 3, 1, 'rgba(200,200,200,0.3)');
+                }
+            }
+
+            // Taunt text
+            if (game.frameCount % 90 < 8) {
+                drawText('SKATE!', sx - 2, sy - 12, '#44aaff', 1);
+            }
+
+            // Ground shadow
+            bctx.fillStyle = 'rgba(0,0,0,0.2)';
+            bctx.fillRect(sx + 2, sy + e.h, e.w - 4, 2);
+
+            if (e.hp < e.maxHp) {
+                drawRect(sx, sy - 14, e.w, 3, PAL.black);
+                drawRect(sx, sy - 13, e.w, 2, '#330000');
+                drawRect(sx, sy - 13, Math.floor(e.w * e.hp / e.maxHp), 2, PAL.green);
+            }
+        }
+
+        // BMX RENDERING
+        if (e.type === 'bmx') {
+            const bmxSprite = getBMXSprite(e.frame);
+            const flipBMX = e.dir < 0;
+            drawSprite2x(bmxSprite, sx, sy, flipBMX);
+
+            // Charging effect
+            if (e.charging) {
+                const trailDir = e.dir > 0 ? -1 : 1;
+                for (let sl = 0; sl < 4; sl++) {
+                    const alpha = 0.4 - sl * 0.08;
+                    bctx.fillStyle = `rgba(255,200,50,${alpha})`;
+                    bctx.fillRect(sx + trailDir * (sl * 6 + 4) + (e.dir > 0 ? 0 : e.w), sy + 10 + sl * 2, 4, 2);
+                }
+                if (game.frameCount % 3 < 2) {
+                    drawText('WHEE!', sx + 2, sy - 14, PAL.red, 1);
+                }
+            }
+
+            // Ground shadow
+            bctx.fillStyle = 'rgba(0,0,0,0.2)';
+            bctx.fillRect(sx + 2, sy + e.h, e.w - 4, 3);
+
+            if (e.hp < e.maxHp) {
+                drawRect(sx, sy - 16, e.w, 3, PAL.black);
+                drawRect(sx, sy - 15, e.w, 2, '#330000');
+                drawRect(sx, sy - 15, Math.floor(e.w * e.hp / e.maxHp), 2, PAL.green);
+            }
+        }
+
+        // HOCKEY PLAYER RENDERING
+        if (e.type === 'hockey') {
+            const hockeySprite = getHockeyPlayerSprite(e.frame, e.shooting);
+            const flipHockey = player.x < e.x;
+            drawSprite2x(hockeySprite, sx, sy, flipHockey);
+
+            // Shooting effect
+            if (e.shooting && e.shootAnim > 12) {
+                const armSide = flipHockey ? sx - 4 : sx + e.w + 2;
+                drawRect(armSide, sy + 8, 6, 2, '#886611');
+                // Ice spray
+                for (let sp = 0; sp < 3; sp++) {
+                    drawPixel(sx + e.w/2 + (Math.random()-0.5)*10, sy + e.h + 1, '#aaddff');
+                }
+            }
+
+            // "PUCK!" text
+            if (e.shooting && e.shootAnim > 8) {
+                drawText('PUCK!', sx - 2, sy - 14, PAL.yellow, 1);
+            }
+
+            // Ground shadow (ice skating)
+            bctx.fillStyle = 'rgba(100,180,255,0.15)';
+            bctx.fillRect(sx + 1, sy + e.h, e.w - 2, 2);
+
+            if (e.hp < e.maxHp) {
+                drawRect(sx, sy - 16, e.w, 3, PAL.black);
+                drawRect(sx, sy - 15, e.w, 2, '#330000');
+                drawRect(sx, sy - 15, Math.floor(e.w * e.hp / e.maxHp), 2, PAL.green);
+            }
+        }
+
+        // SWAN RENDERING
+        if (e.type === 'swan') {
+            const swanSprite = getSwanSprite(e.frame, e.swooping);
+            const flipSwan = e.dir < 0;
+            drawSprite2x(swanSprite, sx, sy, flipSwan);
+
+            // Angry red eye flash when swooping
+            if (e.swooping && game.frameCount % 4 < 2) {
+                bctx.fillStyle = 'rgba(255,50,50,0.3)';
+                bctx.fillRect(sx + 2, sy + 2, e.w - 4, e.h - 4);
+            }
+
+            // Hiss text
+            if (e.swooping && game.frameCount % 6 < 4) {
+                drawText('HSSS!', sx - 2, sy - 10, PAL.red, 1);
+            } else if (!e.swooping && game.frameCount % 100 < 6) {
+                drawText('HONK!', sx - 2, sy - 10, PAL.white, 1);
+            }
+
+            // Wing flap particles
+            if (game.frameCount % 8 === 0) {
+                spawnParticles(e.x + e.w/2, e.y + e.h/2, PAL.white, 2, 1);
+            }
+
+            if (e.hp < e.maxHp) {
+                drawRect(sx, sy - 12, e.w, 3, PAL.black);
+                drawRect(sx, sy - 11, e.w, 2, '#330000');
+                drawRect(sx, sy - 11, Math.floor(e.w * e.hp / e.maxHp), 2, PAL.green);
             }
         }
 
@@ -5307,6 +5966,32 @@ function drawPickups() {
             }
             if (Math.abs(player.x - p.x) < 30) {
                 drawText('AMMO', sx - 3, sy - 6, PAL.orange, 1);
+            }
+        } else if (p.type === 'bat') {
+            // Baseball bat pickup
+            bctx.fillStyle = 'rgba(200,150,50,0.12)';
+            bctx.fillRect(sx - 2, sy + 12, 14, 3);
+
+            // Bat handle
+            drawRect(sx + 1, sy + 6, 3, 5, '#4a3010');
+            drawRect(sx + 2, sy + 6, 1, 5, '#5a4020');
+            // Bat grip tape
+            drawRect(sx + 1, sy + 8, 3, 1, '#222222');
+            // Bat barrel
+            drawRect(sx, sy, 5, 6, '#b8860b');
+            drawRect(sx + 1, sy + 1, 3, 4, '#d4a020');
+            // Bat tip
+            drawRect(sx, sy, 5, 1, '#c89830');
+            // Highlight
+            drawPixel(sx + 2, sy + 2, '#e8c040');
+
+            // Glow pulse
+            if (game.frameCount % 20 < 12) {
+                drawPixel(sx + 3, sy - 2, '#d4a020');
+                drawPixel(sx + 4, sy - 1, PAL.yellow);
+            }
+            if (Math.abs(player.x - p.x) < 35) {
+                drawText('BAT!', sx - 1, sy - 6, '#d4a020', 1);
             }
         }
     });
@@ -5665,6 +6350,33 @@ function drawDiscProjectiles() {
     });
 }
 
+function drawPuckProjectiles() {
+    if (!game.puckProjectiles) return;
+    game.puckProjectiles.forEach(p => {
+        const sx = Math.floor(p.x - game.camX);
+        const sy = Math.floor(p.y);
+        if (sx < -10 || sx > GAME_W + 10) return;
+
+        // Hockey puck - black disc
+        drawRect(sx, sy, 6, 4, '#111111');
+        drawRect(sx + 1, sy + 1, 4, 2, '#333333');
+        // Highlight
+        drawRect(sx + 1, sy, 3, 1, '#555555');
+
+        // Speed trail
+        const trailDir = p.vx > 0 ? -1 : 1;
+        for (let t = 1; t <= 3; t++) {
+            bctx.fillStyle = `rgba(50,50,50,${0.4 - t * 0.1})`;
+            bctx.fillRect(Math.floor(sx + trailDir * t * 4), Math.floor(sy + 1), 3, 2);
+        }
+
+        // Ice spray sparkle
+        if (game.frameCount % 3 < 2) {
+            drawPixel(sx + 3, sy - 1, '#aaddff');
+        }
+    });
+}
+
 // ============================================================
 //  DECORATIONS (lamp posts, trash cans, benches)
 // ============================================================
@@ -5953,6 +6665,7 @@ function draw() {
             drawPukeProjectiles();
             drawDogPoops();
             drawDiscProjectiles();
+            drawPuckProjectiles();
             drawEnemies();
             drawPlayer();
             drawBullets();
