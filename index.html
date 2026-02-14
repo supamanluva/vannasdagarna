@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>W.Ikatti - Vännäsdagarna</title>
+    <title>Vännäsdagarna</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
@@ -56,7 +56,7 @@
 
     <script>
 // ============================================================
-//  W.Ikatti - VÄNNÄSDAGARNA
+//  VÄNNÄSDAGARNA
 //  A retro 8-bit side-scrolling beat 'em up
 // ============================================================
 
@@ -6525,56 +6525,164 @@ function drawDecorations() {
 //  SCREENS
 // ============================================================
 function drawTitleScreen() {
-    bctx.fillStyle = '#0a0a1a';
-    bctx.fillRect(0, 0, GAME_W, GAME_H);
+    // Night sky gradient
+    bctx.fillStyle = '#050520';
+    bctx.fillRect(0, 0, GAME_W, 80);
+    bctx.fillStyle = '#0a0a30';
+    bctx.fillRect(0, 80, GAME_W, 40);
+    bctx.fillStyle = '#101040';
+    bctx.fillRect(0, 120, GAME_W, 20);
 
-    // Background decoration
-    for (let i = 0; i < 30; i++) {
-        const sx = (i * 47 + game.frameCount) % GAME_W;
-        const sy = (i * 23) % 100;
-        drawPixel(sx, sy, PAL.indigo);
+    // Stars twinkling
+    for (let i = 0; i < 40; i++) {
+        const sx = (i * 73 + 17) % GAME_W;
+        const sy = (i * 31 + 3) % 80;
+        if ((game.frameCount + i * 11) % 40 < 35) {
+            drawPixel(sx, sy, i % 3 === 0 ? '#aaaaff' : '#ffffff');
+        }
     }
 
-    // Animated road at bottom
-    drawRect(0, GAME_H - 30, GAME_W, 30, PAL.asphalt);
+    // Fireworks bursts
+    for (let fw = 0; fw < 4; fw++) {
+        const fwx = 60 + fw * 95 + Math.sin(game.frameCount * 0.02 + fw) * 20;
+        const fwy = 25 + Math.cos(game.frameCount * 0.03 + fw * 2) * 10;
+        const fwColors = ['#ff4444', '#ffdd00', '#44ff44', '#4488ff'];
+        const phase = (game.frameCount + fw * 37) % 90;
+        if (phase < 40) {
+            for (let sp = 0; sp < 8; sp++) {
+                const ang = (sp / 8) * Math.PI * 2 + game.frameCount * 0.04;
+                const dist = phase * 0.3;
+                drawPixel(Math.floor(fwx + Math.cos(ang) * dist), Math.floor(fwy + Math.sin(ang) * dist), fwColors[fw]);
+                if (dist > 3) drawPixel(Math.floor(fwx + Math.cos(ang) * (dist - 2)), Math.floor(fwy + Math.sin(ang) * (dist - 2)), '#ffffff');
+            }
+        }
+    }
+
+    // Distant village silhouette
+    bctx.fillStyle = '#1a1a3a';
+    bctx.fillRect(0, 100, GAME_W, 40);
+    // Buildings silhouette
+    const silhouettes = [20,50,80,120,155,195,230,270,310,345];
+    silhouettes.forEach((bx, i) => {
+        const bh = 12 + (i * 7 + 3) % 18;
+        drawRect(bx, 100 - bh, 28, bh + 2, '#111128');
+        drawRect(bx + 2, 100 - bh + 2, 24, bh - 2, '#151535');
+        // Lit windows
+        if ((game.frameCount + i * 17) % 60 < 50) {
+            drawPixel(bx + 6, 100 - bh + 6, '#ffdd88');
+            drawPixel(bx + 7, 100 - bh + 6, '#ffdd88');
+            drawPixel(bx + 16, 100 - bh + 6, '#ffdd88');
+            drawPixel(bx + 17, 100 - bh + 6, '#ffdd88');
+        }
+    });
+    // Church/tower
+    drawRect(365, 74, 12, 28, '#111128');
+    drawRect(369, 66, 4, 10, '#111128');
+    drawPixel(370, 64, '#ffdd44');
+    drawPixel(371, 64, '#ffdd44');
+
+    // Ground with grass
+    bctx.fillStyle = '#0a2a0a';
+    bctx.fillRect(0, 140, GAME_W, 100);
+    bctx.fillStyle = '#0d330d';
+    bctx.fillRect(0, 140, GAME_W, 3);
+
+    // Animated road
+    drawRect(0, GAME_H - 32, GAME_W, 32, '#333333');
+    drawRect(0, GAME_H - 33, GAME_W, 2, '#444444');
     for (let i = 0; i < GAME_W; i += 20) {
-        drawRect((i - game.frameCount * 2) % GAME_W, GAME_H - 16, 10, 2, PAL.yellow);
+        drawRect(((i - game.frameCount * 2) % GAME_W + GAME_W) % GAME_W, GAME_H - 18, 10, 2, PAL.yellow);
     }
 
-    // Title
-    const bounce = Math.sin(game.frameCount * 0.05) * 3;
-    drawText('W.IKATTI', GAME_W / 2 - 50, 40 + bounce, PAL.yellow, 2);
+    // Festival light string across top
+    for (let li = 0; li < 30; li++) {
+        const lx = 8 + li * 13;
+        const ly = 92 + Math.sin(li * 0.5) * 2;
+        const lColors = ['#ff2222', '#ffcc00', '#22ff22', '#2288ff', '#ff66ff'];
+        if (li < 29) drawRect(lx + 6, Math.floor(ly), 8, 1, '#333333');
+        drawRect(lx, Math.floor(ly) + 1, 3, 3, lColors[li % 5]);
+        if ((game.frameCount + li * 5) % 20 < 15) {
+            drawPixel(lx + 1, Math.floor(ly), lColors[li % 5]);
+        }
+    }
 
-    drawText('- VÄNNÄSDAGARNA -', GAME_W / 2 - 55, 70, PAL.orange, 1);
+    // Swedish flags on poles
+    const flagPoles = [30, GAME_W - 42];
+    flagPoles.forEach(fp => {
+        drawRect(fp, 100, 2, 48, '#664422');
+        drawPixel(fp, 99, '#ccaa44');
+        drawPixel(fp + 1, 99, '#ccaa44');
+        const flagWave = Math.sin(game.frameCount * 0.08) * 1;
+        // Swedish flag blue + yellow cross
+        drawRect(fp + 2, 100 + Math.floor(flagWave), 14, 10, '#004B87');
+        drawRect(fp + 6, 100 + Math.floor(flagWave), 3, 10, '#FECC00');
+        drawRect(fp + 2, 104 + Math.floor(flagWave), 14, 2, '#FECC00');
+    });
+
+    // Tivoli/ferris wheel silhouette
+    const fwCx = GAME_W / 2;
+    const fwCy = 108;
+    const fwR = 18;
+    for (let a = 0; a < 8; a++) {
+        const angle = (a / 8) * Math.PI * 2 + game.frameCount * 0.01;
+        const ex = fwCx + Math.cos(angle) * fwR;
+        const ey = fwCy + Math.sin(angle) * fwR;
+        drawPixel(Math.floor(ex), Math.floor(ey), '#ffcc44');
+        drawPixel(Math.floor(ex) + 1, Math.floor(ey), '#ffcc44');
+    }
+    // Spokes
+    for (let s = 0; s < 4; s++) {
+        const angle = (s / 4) * Math.PI * 2 + game.frameCount * 0.01;
+        for (let d = 0; d < fwR; d += 3) {
+            drawPixel(Math.floor(fwCx + Math.cos(angle) * d), Math.floor(fwCy + Math.sin(angle) * d), '#333355');
+        }
+    }
+    drawRect(fwCx - 1, fwCy + fwR, 3, 14, '#333355');
+
+    // ===== TITLE TEXT =====
+    const bounce = Math.sin(game.frameCount * 0.05) * 3;
+
+    // Big shadow
+    drawText('VÄNNÄSDAGARNA', GAME_W / 2 - 79, 146 + Math.floor(bounce) + 1, '#0a2a0a', 2);
+    // Coloured letters with rainbow cycle
+    const titleStr = 'VÄNNÄSDAGARNA';
+    const titleColors = ['#ff4444', '#ff8844', '#ffcc44', '#44ff44', '#44ccff', '#8888ff', '#ff44ff'];
+    for (let ti = 0; ti < titleStr.length; ti++) {
+        const tc = titleColors[(ti + Math.floor(game.frameCount / 12)) % titleColors.length];
+        drawChar(titleStr[ti], GAME_W / 2 - 78 + ti * 12, 146 + Math.floor(bounce), tc, 2);
+    }
 
     // Subtitle
-    drawText('SLÅSS I VÄNNÄS!', GAME_W / 2 - 48, 95, PAL.grey, 1);
+    drawText('BEAT \'EM UP I VÄNNÄS!', GAME_W / 2 - 62, 170, PAL.orange, 1);
 
-    // Instructions
-    drawText('PILAR/WASD    GÅ', 100, 130, PAL.white, 1);
-    drawText('SPACE/W/UPP HOPPA', 100, 142, PAL.white, 1);
-    drawText('Z/J/ENTER    SLÅ', 100, 154, PAL.white, 1);
-    drawText('X/K/KLICK  SKJUT', 100, 166, PAL.white, 1);
+    // Instructions in neat box
+    drawRect(85, 184, 230, 36, '#000000');
+    drawRect(86, 185, 228, 34, '#111122');
+    drawRect(86, 185, 228, 1, '#333355');
+    drawText('PILAR    GÅ    SPACE  HOPPA', 92, 188, PAL.white, 1);
+    drawText('Z/ENTER  SLÅ   X/K   SKJUT', 92, 198, PAL.white, 1);
+    drawText('WALDEMAR MOT VÄNNÄS GATOR', 92, 210, PAL.grey, 1);
 
     // Blink start text
     if (game.frameCount % 50 < 35) {
-        drawText('TRYCK ENTER FÖR ATT STARTA', GAME_W / 2 - 80, 192, PAL.green, 1);
+        drawText('TRYCK ENTER FÖR ATT STARTA', GAME_W / 2 - 80, 226, PAL.green, 1);
     }
 
     // High score
     if (game.highScore > 0) {
-        drawText('HÖGSTA POÄNG ' + game.highScore, GAME_W / 2 - 50, 212, PAL.yellow, 1);
+        drawText('BÄST ' + game.highScore, GAME_W / 2 - 30, 236, PAL.yellow, 1);
     }
 
-    // Copyright
-    drawText('2026 VÄNNÄS STUDIOS', GAME_W / 2 - 60, 228, PAL.darkgrey, 1);
-
-    // Animated character preview
+    // Animated character WALDEMAR walking
     const pSprite = getPlayerSprite(Math.floor(game.frameCount / 10), false);
-    drawSprite(pSprite, 50, GAME_H - 55);
-    // EPA driving across title screen
-    const epaX = (GAME_W + 40 - (game.frameCount * 2) % (GAME_W + 80));
+    drawSprite(pSprite, 55, 148);
+
+    // EPA driving across
+    const epaX = ((GAME_W + 40 - (game.frameCount * 2) % (GAME_W + 80)) + GAME_W + 80) % (GAME_W + 80) - 40;
     drawSprite(getEPASprite(game.frameCount), epaX, GAME_H - 52);
+
+    // Copyright
+    drawText('2026 VÄNNÄS', GAME_W / 2 - 34, GAME_H - 4, '#333355', 1);
 }
 
 function drawGameOverScreen() {
@@ -6614,9 +6722,13 @@ function updateCutscene() {
                 game.cutsceneTimer = 720;
                 break;
             case 'medborgarhuset':
+                game.cutscenePhase = 'van_arrival';
+                game.cutsceneTimer = 480;
+                playSkraeckoedlanMusic();
+                break;
+            case 'van_arrival':
                 game.cutscenePhase = 'concert_intro';
                 game.cutsceneTimer = 300;
-                playSkraeckoedlanMusic();
                 break;
             case 'concert_intro':
                 game.cutscenePhase = 'concert';
@@ -6636,6 +6748,9 @@ function drawCutscene() {
             break;
         case 'medborgarhuset':
             drawCutsceneMedborgarhuset();
+            break;
+        case 'van_arrival':
+            drawCutsceneVanArrival();
             break;
         case 'concert_intro':
             drawCutsceneConcertIntro();
@@ -6819,10 +6934,10 @@ function drawCutsceneMedborgarhuset() {
     if (elapsed < 160) {
         drawText('...', GAME_W/2 - 10, dialogueY + 10, PAL.grey, 1);
     } else if (elapsed < 280) {
-        drawText('W.IKATTI:', 12, dialogueY + 4, PAL.green, 1);
+        drawText('WALDEMAR:', 12, dialogueY + 4, PAL.green, 1);
         drawText('RIFF RAFF RUFF ÄR BORTA!', 12, dialogueY + 16, PAL.white, 1);
     } else if (elapsed < 400) {
-        drawText('W.IKATTI:', 12, dialogueY + 4, PAL.green, 1);
+        drawText('WALDEMAR:', 12, dialogueY + 4, PAL.green, 1);
         drawText('VI BEHÖVER ETT RIKTIGT BAND!', 12, dialogueY + 16, PAL.white, 1);
     } else if (elapsed < 500) {
         drawText('NÄRINGSLIVSPLANERAREN:', 12, dialogueY + 4, PAL.orange, 1);
@@ -6831,8 +6946,279 @@ function drawCutsceneMedborgarhuset() {
         drawText('NÄRINGSLIVSPLANERAREN:', 12, dialogueY + 4, PAL.orange, 1);
         drawText('JAG RINGER SKRAECKOEDLAN!', 12, dialogueY + 16, PAL.yellow, 1);
     } else {
-        drawText('W.IKATTI:', 12, dialogueY + 4, PAL.green, 1);
+        drawText('WALDEMAR:', 12, dialogueY + 4, PAL.green, 1);
         drawText('YEEEEEES!', 12, dialogueY + 16, PAL.yellow, 2);
+    }
+}
+
+function drawCutsceneVanArrival() {
+    // Dusk sky
+    bctx.fillStyle = '#1a0a2a';
+    bctx.fillRect(0, 0, GAME_W, 60);
+    bctx.fillStyle = '#2a1040';
+    bctx.fillRect(0, 60, GAME_W, 30);
+    bctx.fillStyle = '#3a1a30';
+    bctx.fillRect(0, 90, GAME_W, 20);
+    bctx.fillStyle = '#4a2020';
+    bctx.fillRect(0, 110, GAME_W, 10);
+
+    // Stars
+    for (let i = 0; i < 25; i++) {
+        const sx = (i * 61 + 11) % GAME_W;
+        const sy = (i * 29 + 7) % 55;
+        if ((game.frameCount + i * 13) % 35 < 28) {
+            drawPixel(sx, sy, '#ffffff');
+        }
+    }
+
+    // Sunset glow on horizon
+    for (let sg = 0; sg < 10; sg++) {
+        const sgx = 80 + sg * 30;
+        drawPixel(sgx, 108, '#ff6644');
+        drawPixel(sgx + 1, 108, '#ff8844');
+        drawPixel(sgx, 109, '#ff4422');
+    }
+
+    // Treeline silhouette
+    for (let t = 0; t < 20; t++) {
+        const tx = t * 22;
+        const th = 8 + (t * 7 + 5) % 12;
+        drawRect(tx, 120 - th, 18, th, '#0a0a15');
+        drawRect(tx + 3, 120 - th - 3, 12, 5, '#0a0a15');
+    }
+
+    // Ground
+    bctx.fillStyle = '#1a2a0a';
+    bctx.fillRect(0, 120, GAME_W, 30);
+
+    // Road
+    drawRect(0, 150, GAME_W, 40, '#333333');
+    drawRect(0, 149, GAME_W, 2, '#444444');
+    drawRect(0, 190, GAME_W, 2, '#444444');
+    // Road lines scrolling with van
+    for (let rl = 0; rl < 25; rl++) {
+        const rlx = ((rl * 20 - game.frameCount * 3) % (GAME_W + 40) + GAME_W + 40) % (GAME_W + 40) - 20;
+        drawRect(rlx, 169, 10, 2, '#ffcc44');
+    }
+
+    // Grass below road
+    bctx.fillStyle = '#0d200d';
+    bctx.fillRect(0, 192, GAME_W, 48);
+
+    // "VÄLKOMMEN TILL VÄNNÄS" sign (right side)
+    drawRect(GAME_W - 100, 128, 80, 18, '#224488');
+    drawRect(GAME_W - 98, 130, 76, 14, '#2255aa');
+    drawText('VÄLKOMMEN', GAME_W - 96, 131, PAL.white, 1);
+    drawText('TILL VÄNNÄS', GAME_W - 96, 139, PAL.yellow, 1);
+    drawRect(GAME_W - 82, 146, 3, 10, '#555555');
+    drawRect(GAME_W - 42, 146, 3, 10, '#555555');
+
+    // === THE VAN ===
+    const elapsed = 480 - game.cutsceneTimer;
+    // Van drives in from right, slows down and stops center-left
+    let vanX;
+    if (elapsed < 180) {
+        // Driving in from right
+        vanX = GAME_W + 60 - elapsed * 2.8;
+    } else if (elapsed < 240) {
+        // Slowing down
+        const slowPhase = elapsed - 180;
+        vanX = GAME_W + 60 - 180 * 2.8 - slowPhase * (2.8 - slowPhase * 0.04);
+        vanX = Math.max(vanX, 100);
+    } else {
+        vanX = 100;
+    }
+    const vanY = 148;
+    const vanBounce = elapsed < 240 ? Math.sin(game.frameCount * 0.3) * 1 : 0;
+    const vby = Math.floor(vanBounce);
+
+    // Exhaust smoke when driving
+    if (elapsed < 250) {
+        for (let sm = 0; sm < 4; sm++) {
+            const smx = vanX + 90 + sm * 6 + Math.sin(game.frameCount * 0.1 + sm) * 3;
+            const smy = vanY + 20 + vby - sm * 2 + Math.cos(game.frameCount * 0.15 + sm) * 2;
+            if ((game.frameCount + sm * 3) % 6 < 4) {
+                drawRect(Math.floor(smx), Math.floor(smy), 3, 2, '#555555');
+                drawRect(Math.floor(smx) + 2, Math.floor(smy) - 1, 2, 2, '#444444');
+            }
+        }
+    }
+
+    // Van body - beat up stoner rock touring van
+    const vx = Math.floor(vanX);
+    const vy = vanY + vby;
+
+    // Main body
+    drawRect(vx, vy, 85, 28, '#884422');
+    drawRect(vx + 1, vy + 1, 83, 26, '#995533');
+    // Roof
+    drawRect(vx + 2, vy - 6, 60, 8, '#884422');
+    drawRect(vx + 3, vy - 5, 58, 6, '#995533');
+    drawRect(vx + 60, vy - 4, 8, 6, '#884422');
+    // Roof rack with gear
+    drawRect(vx + 5, vy - 9, 52, 3, '#444444');
+    drawRect(vx + 8, vy - 12, 18, 4, '#222222'); // Amp case
+    drawRect(vx + 30, vy - 13, 12, 5, '#555555'); // Another case
+    drawRect(vx + 44, vy - 11, 8, 3, '#333333');  // Small case
+
+    // Windshield
+    drawRect(vx + 62, vy - 2, 18, 14, '#224466');
+    drawRect(vx + 63, vy - 1, 16, 12, '#335577');
+    drawRect(vx + 70, vy - 2, 2, 14, '#995533'); // Divider
+
+    // Side windows
+    drawRect(vx + 8, vy + 2, 14, 10, '#224466');
+    drawRect(vx + 9, vy + 3, 12, 8, '#335577');
+    drawRect(vx + 26, vy + 2, 14, 10, '#224466');
+    drawRect(vx + 27, vy + 3, 12, 8, '#335577');
+
+    // === PSYCHEDELIC VAN ART ===
+    // Cactus painted on side
+    drawRect(vx + 45, vy + 4, 3, 12, '#2d5a1e');
+    drawRect(vx + 42, vy + 8, 3, 2, '#2d5a1e');
+    drawRect(vx + 42, vy + 6, 2, 4, '#2d5a1e');
+    drawRect(vx + 48, vy + 10, 3, 2, '#2d5a1e');
+    drawRect(vx + 49, vy + 8, 2, 4, '#2d5a1e');
+    // Skull
+    drawRect(vx + 56, vy + 6, 4, 4, '#cccccc');
+    drawPixel(vx + 56, vy + 8, '#111111');
+    drawPixel(vx + 59, vy + 8, '#111111');
+    drawRect(vx + 57, vy + 10, 2, 1, '#cccccc');
+    // Flame paint on front fender
+    drawPixel(vx + 72, vy + 16, '#ff4400');
+    drawPixel(vx + 73, vy + 15, '#ff6600');
+    drawPixel(vx + 74, vy + 14, '#ff8800');
+    drawPixel(vx + 75, vy + 16, '#ff4400');
+    drawPixel(vx + 76, vy + 15, '#ff6600');
+    drawPixel(vx + 77, vy + 13, '#ffaa00');
+
+    // "SKRAECKOEDLAN" text on van side (small)
+    drawText('SKRAECKOEDLAN', vx + 4, vy + 18, '#ff6600', 1);
+
+    // Bumper
+    drawRect(vx + 80, vy + 22, 6, 4, '#555555');
+    drawRect(vx - 2, vy + 24, 88, 3, '#444444');
+
+    // Headlights
+    if (elapsed < 240) {
+        drawRect(vx + 82, vy + 10, 4, 4, '#ffee88');
+        drawRect(vx + 82, vy + 18, 4, 3, '#ff4444');
+        // Headlight beam
+        for (let hb = 0; hb < 6; hb++) {
+            drawPixel(vx + 86 + hb * 3, vy + 11, '#ffee44');
+            drawPixel(vx + 87 + hb * 3, vy + 12, '#ffdd33');
+        }
+    } else {
+        drawRect(vx + 82, vy + 10, 4, 4, '#aa9944');
+        drawRect(vx + 82, vy + 18, 4, 3, '#882222');
+    }
+
+    // Wheels
+    const wheelSpin = elapsed < 240 ? game.frameCount * 0.3 : 0;
+    // Front wheel
+    drawRect(vx + 68, vy + 26, 12, 10, '#111111');
+    drawRect(vx + 69, vy + 27, 10, 8, '#222222');
+    drawRect(vx + 72, vy + 29, 4, 4, '#444444');
+    if (elapsed < 240) {
+        drawPixel(vx + 73 + Math.floor(Math.cos(wheelSpin) * 2), vy + 30 + Math.floor(Math.sin(wheelSpin) * 2), '#666666');
+    }
+    // Rear wheel
+    drawRect(vx + 8, vy + 26, 12, 10, '#111111');
+    drawRect(vx + 9, vy + 27, 10, 8, '#222222');
+    drawRect(vx + 12, vy + 29, 4, 4, '#444444');
+    if (elapsed < 240) {
+        drawPixel(vx + 13 + Math.floor(Math.cos(wheelSpin) * 2), vy + 30 + Math.floor(Math.sin(wheelSpin) * 2), '#666666');
+    }
+
+    // Dust clouds behind van while driving
+    if (elapsed < 200) {
+        for (let d = 0; d < 5; d++) {
+            const dx = vx + 90 + d * 14 + Math.sin(game.frameCount * 0.08 + d) * 4;
+            const dy = vy + 30 + Math.sin(game.frameCount * 0.1 + d * 2) * 3;
+            drawRect(Math.floor(dx), Math.floor(dy), 4, 3, '#776655');
+            drawRect(Math.floor(dx) + 2, Math.floor(dy) - 1, 3, 2, '#665544');
+        }
+    }
+
+    // === BAND MEMBERS EXIT VAN (after stopped) ===
+    if (elapsed > 280) {
+        const exitProgress = Math.min((elapsed - 280) / 60, 1);
+        // Door opens
+        drawRect(vx + 60, vy + 12, 2, 16, '#774422');
+
+        // Member 1 - guitarist (long hair)
+        const m1x = vx + 62 + exitProgress * 30;
+        const m1y = vy + 8;
+        drawRect(Math.floor(m1x), m1y, 8, 4, '#553311');
+        drawRect(Math.floor(m1x) - 1, m1y + 2, 10, 6, '#553311');
+        drawRect(Math.floor(m1x) + 1, m1y + 2, 6, 4, PAL.peach);
+        drawRect(Math.floor(m1x), m1y + 7, 8, 8, '#111111');
+        drawRect(Math.floor(m1x) + 1, m1y + 15, 3, 4, '#222222');
+        drawRect(Math.floor(m1x) + 4, m1y + 15, 3, 4, '#222222');
+    }
+    if (elapsed > 310) {
+        const exitProgress = Math.min((elapsed - 310) / 60, 1);
+        // Member 2 - bassist (black hair)
+        const m2x = vx + 62 + exitProgress * 48;
+        const m2y = vy + 8;
+        drawRect(Math.floor(m2x), m2y, 8, 3, '#222222');
+        drawRect(Math.floor(m2x) - 1, m2y + 2, 10, 7, '#222222');
+        drawRect(Math.floor(m2x) + 1, m2y + 2, 6, 4, PAL.peach);
+        drawRect(Math.floor(m2x), m2y + 7, 8, 8, '#1a1a2a');
+        drawRect(Math.floor(m2x) + 1, m2y + 15, 3, 4, '#222222');
+        drawRect(Math.floor(m2x) + 4, m2y + 15, 3, 4, '#222222');
+    }
+    if (elapsed > 340) {
+        const exitProgress = Math.min((elapsed - 340) / 60, 1);
+        // Member 3 - drummer (headband)
+        const m3x = vx + 62 + exitProgress * 66;
+        const m3y = vy + 8;
+        drawRect(Math.floor(m3x), m3y + 1, 8, 3, '#443311');
+        drawRect(Math.floor(m3x), m3y, 8, 2, '#ff8800');
+        drawRect(Math.floor(m3x) + 1, m3y + 2, 6, 4, PAL.peach);
+        drawRect(Math.floor(m3x), m3y + 7, 8, 8, '#111111');
+        drawRect(Math.floor(m3x) + 1, m3y + 15, 3, 4, '#222222');
+        drawRect(Math.floor(m3x) + 4, m3y + 15, 3, 4, '#222222');
+    }
+
+    // Waldemar waiting on the left
+    const wdx = 40;
+    const wdy = vy + 4;
+    drawRect(wdx + 2, wdy, 10, 3, '#444444');
+    drawRect(wdx + 3, wdy + 3, 8, 6, PAL.peach);
+    drawPixel(wdx + 5, wdy + 5, PAL.black);
+    drawPixel(wdx + 8, wdy + 5, PAL.black);
+    drawRect(wdx + 2, wdy + 9, 10, 8, '#2244aa');
+    drawRect(wdx + 2, wdy + 17, 4, 5, '#222244');
+    drawRect(wdx + 7, wdy + 17, 4, 5, '#222244');
+    // Waldemar waves (arm up)
+    if (elapsed > 200 && game.frameCount % 20 < 12) {
+        drawRect(wdx + 11, wdy + 6, 2, 2, PAL.peach);
+        drawRect(wdx + 11, wdy + 3, 2, 4, PAL.peach);
+    } else {
+        drawRect(wdx + 11, wdy + 10, 2, 6, PAL.peach);
+    }
+
+    // === DIALOGUE ===
+    const dialogueY = GAME_H - 36;
+    drawRect(4, dialogueY - 2, GAME_W - 8, 34, '#000000');
+    drawRect(6, dialogueY, GAME_W - 12, 30, '#111122');
+    drawRect(6, dialogueY, GAME_W - 12, 2, '#333355');
+
+    if (elapsed < 160) {
+        drawText('*VROOOOM*', GAME_W/2 - 28, dialogueY + 10, '#ff6600', 1);
+    } else if (elapsed < 260) {
+        drawText('SKRAECKOEDLAN HAR ANLÄNT!', 12, dialogueY + 4, '#ff6600', 1);
+        drawText('VÄNNÄSDAGARNA BLIR RÄDDADE!', 12, dialogueY + 16, PAL.yellow, 1);
+    } else if (elapsed < 360) {
+        drawText('WALDEMAR:', 12, dialogueY + 4, PAL.green, 1);
+        drawText('ÄNTLIGEN! RIKTIGT BAND!', 12, dialogueY + 16, PAL.white, 1);
+    } else {
+        drawText('SKRAECKOEDLAN:', 12, dialogueY + 4, '#ff6600', 1);
+        drawText('DAGS ATT ROCKA VÄNNÄS!', 12, dialogueY + 16, PAL.yellow, 1);
+        if (game.frameCount % 30 < 20) {
+            drawText('\\m/', GAME_W - 40, dialogueY + 16, PAL.red, 1);
+        }
     }
 }
 
@@ -7187,7 +7573,7 @@ function drawVictoryScreen() {
 
     if (game.level === 3) {
         // Level 3 victory - SKRAECKOEDLAN rocks Vännäsdagarna!
-        drawText('W.IKATTI RÄDDADE', GAME_W / 2 - 50, 80, PAL.white, 1);
+        drawText('WALDEMAR RÄDDADE', GAME_W / 2 - 50, 80, PAL.white, 1);
         drawText('VÄNNÄSDAGARNA!', GAME_W / 2 - 44, 92, PAL.yellow, 1);
 
         // Mini stage with SKRAECKOEDLAN
@@ -7227,7 +7613,7 @@ function drawVictoryScreen() {
 
     } else if (game.level === 2) {
         // Level 2 victory - Kocken defeated
-        drawText('W.IKATTI BESEGRADE', GAME_W / 2 - 56, 85, PAL.white, 1);
+        drawText('WALDEMAR BESEGRADE', GAME_W / 2 - 56, 85, PAL.white, 1);
         drawText('KOCKEN OCH HANS', GAME_W / 2 - 48, 97, PAL.white, 1);
         drawText('BLÖTA POMMES FRITES!', GAME_W / 2 - 62, 112, PAL.yellow, 1);
 
@@ -7245,7 +7631,7 @@ function drawVictoryScreen() {
         drawText('FRASSES ÄR STÄNGT!', GAME_W / 2 - 56, 148, PAL.red, 1);
     } else {
         // Level 1 victory
-        drawText('W.IKATTI BESEGRADE', GAME_W / 2 - 56, 85, PAL.white, 1);
+        drawText('WALDEMAR BESEGRADE', GAME_W / 2 - 56, 85, PAL.white, 1);
         drawText('KOCKEN OCH HANS', GAME_W / 2 - 48, 97, PAL.white, 1);
         drawText('BLÖTA POMMES FRITES!', GAME_W / 2 - 62, 112, PAL.yellow, 1);
 
