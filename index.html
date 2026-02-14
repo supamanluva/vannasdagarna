@@ -4027,7 +4027,7 @@ function updatePlayer() {
                 game.level3BossDefeated = true;
                 game.state = 'cutscene';
                 game.cutscenePhase = 'fadeout';
-                game.cutsceneTimer = 180;
+                game.cutsceneTimer = 300;
                 game.highScore = Math.max(game.highScore, game.score);
                 stopMusic();
             }
@@ -5436,7 +5436,7 @@ function drawPlayer() {
 
     // Gun in hand (when player has gun, draw it on the sprite)
     if (player.hasGun && !player.attacking) {
-        const gunX = player.facing > 0 ? px + 22 : px - 8;
+        const gunX = player.facing > 0 ? px + 22 : px + 8;
         const gunY = py + 14;
         // Small pistol in hand
         drawRect(gunX, gunY, 6, 2, '#555555');
@@ -5446,7 +5446,7 @@ function drawPlayer() {
 
     // Baseball bat in hand
     if (player.hasBat && !player.attacking) {
-        const batX = player.facing > 0 ? px + 20 : px - 10;
+        const batX = player.facing > 0 ? px + 20 : px + 8;
         const batY = py + 6;
         // Bat shaft
         drawRect(batX, batY, 2, 14, '#b8860b');
@@ -5460,7 +5460,7 @@ function drawPlayer() {
 
     // Bat swing effect
     if (player.hasBat && player.attacking && player.attackTimer > 6) {
-        const swooshX = player.facing > 0 ? px + 26 : px - 16;
+        const swooshX = player.facing > 0 ? px + 26 : px + 2;
         const swooshPhase = 12 - player.attackTimer;
         // Bigger swoosh for bat
         bctx.fillStyle = 'rgba(200,160,50,0.5)';
@@ -6709,7 +6709,7 @@ function updateCutscene() {
     game.cutsceneTimer--;
 
     // Allow skip during concert
-    if (game.cutscenePhase === 'concert' && game.cutsceneTimer < 700 && keys['Enter']) {
+    if (game.cutscenePhase === 'concert' && game.cutsceneTimer < 900 && keys['Enter']) {
         game.state = 'victory';
         keys['Enter'] = false;
         return;
@@ -6719,20 +6719,20 @@ function updateCutscene() {
         switch (game.cutscenePhase) {
             case 'fadeout':
                 game.cutscenePhase = 'medborgarhuset';
-                game.cutsceneTimer = 720;
+                game.cutsceneTimer = 1080;
                 break;
             case 'medborgarhuset':
                 game.cutscenePhase = 'van_arrival';
-                game.cutsceneTimer = 480;
+                game.cutsceneTimer = 720;
                 playSkraeckoedlanMusic();
                 break;
             case 'van_arrival':
                 game.cutscenePhase = 'concert_intro';
-                game.cutsceneTimer = 300;
+                game.cutsceneTimer = 480;
                 break;
             case 'concert_intro':
                 game.cutscenePhase = 'concert';
-                game.cutsceneTimer = 900;
+                game.cutsceneTimer = 1200;
                 break;
             case 'concert':
                 game.state = 'victory';
@@ -6764,7 +6764,7 @@ function drawCutscene() {
 function drawCutsceneFadeout() {
     bctx.fillStyle = '#000000';
     bctx.fillRect(0, 0, GAME_W, GAME_H);
-    const progress = 1 - (game.cutsceneTimer / 180);
+    const progress = 1 - (game.cutsceneTimer / 300);
     if (progress > 0.3) {
         drawText('BANDET ÄR KROSSAT!', GAME_W/2 - 58, GAME_H/2 - 20, PAL.red, 1);
     }
@@ -6863,13 +6863,13 @@ function drawCutsceneMedborgarhuset() {
     }
 
     // === CHARACTERS ===
-    const elapsed = 420 - game.cutsceneTimer;
+    const elapsed = 1080 - game.cutsceneTimer;
 
-    // Player W.IKATTI walks in from left (first ~60 frames)
+    // Player W.IKATTI walks in from left (first ~90 frames)
     const playerTargetX = bx + 20;
-    const px = Math.min(elapsed * 1.2, playerTargetX);
+    const px = Math.min(elapsed * 0.8, playerTargetX);
     const py = GAME_H - 68;
-    const walkFrame = elapsed < 100 ? Math.floor(elapsed / 6) % 4 : 0;
+    const walkFrame = elapsed < 150 ? Math.floor(elapsed / 6) % 4 : 0;
 
     // W.IKATTI sprite
     drawRect(px + 2, py, 10, 3, '#444444');
@@ -6891,8 +6891,8 @@ function drawCutsceneMedborgarhuset() {
     drawRect(px + 2, py + 22, 4, 2, '#111111');
     drawRect(px + 7, py + 22, 4, 2, '#111111');
 
-    // Näringslivsplaneraren appears at door after 140 frames
-    if (elapsed > 140) {
+    // Näringslivsplaneraren appears at door after 210 frames
+    if (elapsed > 210) {
         const npx = bx + 70;
         const npy = GAME_H - 68;
         // Hair
@@ -6931,18 +6931,18 @@ function drawCutsceneMedborgarhuset() {
     drawRect(6, dialogueY, GAME_W - 12, 30, '#111122');
     drawRect(6, dialogueY, GAME_W - 12, 2, '#333355');
 
-    if (elapsed < 160) {
+    if (elapsed < 240) {
         drawText('...', GAME_W/2 - 10, dialogueY + 10, PAL.grey, 1);
-    } else if (elapsed < 280) {
+    } else if (elapsed < 420) {
         drawText('WALDEMAR:', 12, dialogueY + 4, PAL.green, 1);
         drawText('RIFF RAFF RUFF ÄR BORTA!', 12, dialogueY + 16, PAL.white, 1);
-    } else if (elapsed < 400) {
+    } else if (elapsed < 600) {
         drawText('WALDEMAR:', 12, dialogueY + 4, PAL.green, 1);
         drawText('VI BEHÖVER ETT RIKTIGT BAND!', 12, dialogueY + 16, PAL.white, 1);
-    } else if (elapsed < 500) {
+    } else if (elapsed < 750) {
         drawText('NÄRINGSLIVSPLANERAREN:', 12, dialogueY + 4, PAL.orange, 1);
         drawText('HMMMM...', 12, dialogueY + 16, PAL.white, 1);
-    } else if (elapsed < 620) {
+    } else if (elapsed < 930) {
         drawText('NÄRINGSLIVSPLANERAREN:', 12, dialogueY + 4, PAL.orange, 1);
         drawText('JAG RINGER SKRAECKOEDLAN!', 12, dialogueY + 16, PAL.yellow, 1);
     } else {
@@ -6995,9 +6995,9 @@ function drawCutsceneVanArrival() {
     drawRect(0, 150, GAME_W, 40, '#333333');
     drawRect(0, 149, GAME_W, 2, '#444444');
     drawRect(0, 190, GAME_W, 2, '#444444');
-    // Road lines scrolling with van
+    // Road lines (static - road doesn't move, only the van does)
     for (let rl = 0; rl < 25; rl++) {
-        const rlx = ((rl * 20 - game.frameCount * 3) % (GAME_W + 40) + GAME_W + 40) % (GAME_W + 40) - 20;
+        const rlx = rl * 20;
         drawRect(rlx, 169, 10, 2, '#ffcc44');
     }
 
@@ -7014,26 +7014,26 @@ function drawCutsceneVanArrival() {
     drawRect(GAME_W - 42, 146, 3, 10, '#555555');
 
     // === THE VAN ===
-    const elapsed = 480 - game.cutsceneTimer;
+    const elapsed = 720 - game.cutsceneTimer;
     // Van drives in from right, slows down and stops center-left
     let vanX;
-    if (elapsed < 180) {
+    if (elapsed < 270) {
         // Driving in from right
-        vanX = GAME_W + 60 - elapsed * 2.8;
-    } else if (elapsed < 240) {
+        vanX = GAME_W + 60 - elapsed * 1.87;
+    } else if (elapsed < 360) {
         // Slowing down
-        const slowPhase = elapsed - 180;
-        vanX = GAME_W + 60 - 180 * 2.8 - slowPhase * (2.8 - slowPhase * 0.04);
+        const slowPhase = elapsed - 270;
+        vanX = GAME_W + 60 - 270 * 1.87 - slowPhase * (1.87 - slowPhase * 0.02);
         vanX = Math.max(vanX, 100);
     } else {
         vanX = 100;
     }
     const vanY = 148;
-    const vanBounce = elapsed < 240 ? Math.sin(game.frameCount * 0.3) * 1 : 0;
+    const vanBounce = elapsed < 360 ? Math.sin(game.frameCount * 0.3) * 1 : 0;
     const vby = Math.floor(vanBounce);
 
     // Exhaust smoke when driving
-    if (elapsed < 250) {
+    if (elapsed < 375) {
         for (let sm = 0; sm < 4; sm++) {
             const smx = vanX + 90 + sm * 6 + Math.sin(game.frameCount * 0.1 + sm) * 3;
             const smy = vanY + 20 + vby - sm * 2 + Math.cos(game.frameCount * 0.15 + sm) * 2;
@@ -7100,7 +7100,7 @@ function drawCutsceneVanArrival() {
     drawRect(vx - 2, vy + 24, 88, 3, '#444444');
 
     // Headlights
-    if (elapsed < 240) {
+    if (elapsed < 360) {
         drawRect(vx + 82, vy + 10, 4, 4, '#ffee88');
         drawRect(vx + 82, vy + 18, 4, 3, '#ff4444');
         // Headlight beam
@@ -7114,24 +7114,24 @@ function drawCutsceneVanArrival() {
     }
 
     // Wheels
-    const wheelSpin = elapsed < 240 ? game.frameCount * 0.3 : 0;
+    const wheelSpin = elapsed < 360 ? game.frameCount * 0.3 : 0;
     // Front wheel
     drawRect(vx + 68, vy + 26, 12, 10, '#111111');
     drawRect(vx + 69, vy + 27, 10, 8, '#222222');
     drawRect(vx + 72, vy + 29, 4, 4, '#444444');
-    if (elapsed < 240) {
+    if (elapsed < 360) {
         drawPixel(vx + 73 + Math.floor(Math.cos(wheelSpin) * 2), vy + 30 + Math.floor(Math.sin(wheelSpin) * 2), '#666666');
     }
     // Rear wheel
     drawRect(vx + 8, vy + 26, 12, 10, '#111111');
     drawRect(vx + 9, vy + 27, 10, 8, '#222222');
     drawRect(vx + 12, vy + 29, 4, 4, '#444444');
-    if (elapsed < 240) {
+    if (elapsed < 360) {
         drawPixel(vx + 13 + Math.floor(Math.cos(wheelSpin) * 2), vy + 30 + Math.floor(Math.sin(wheelSpin) * 2), '#666666');
     }
 
     // Dust clouds behind van while driving
-    if (elapsed < 200) {
+    if (elapsed < 300) {
         for (let d = 0; d < 5; d++) {
             const dx = vx + 90 + d * 14 + Math.sin(game.frameCount * 0.08 + d) * 4;
             const dy = vy + 30 + Math.sin(game.frameCount * 0.1 + d * 2) * 3;
@@ -7141,8 +7141,8 @@ function drawCutsceneVanArrival() {
     }
 
     // === BAND MEMBERS EXIT VAN (after stopped) ===
-    if (elapsed > 280) {
-        const exitProgress = Math.min((elapsed - 280) / 60, 1);
+    if (elapsed > 420) {
+        const exitProgress = Math.min((elapsed - 420) / 90, 1);
         // Door opens
         drawRect(vx + 60, vy + 12, 2, 16, '#774422');
 
@@ -7156,8 +7156,8 @@ function drawCutsceneVanArrival() {
         drawRect(Math.floor(m1x) + 1, m1y + 15, 3, 4, '#222222');
         drawRect(Math.floor(m1x) + 4, m1y + 15, 3, 4, '#222222');
     }
-    if (elapsed > 310) {
-        const exitProgress = Math.min((elapsed - 310) / 60, 1);
+    if (elapsed > 465) {
+        const exitProgress = Math.min((elapsed - 465) / 90, 1);
         // Member 2 - bassist (black hair)
         const m2x = vx + 62 + exitProgress * 48;
         const m2y = vy + 8;
@@ -7168,8 +7168,8 @@ function drawCutsceneVanArrival() {
         drawRect(Math.floor(m2x) + 1, m2y + 15, 3, 4, '#222222');
         drawRect(Math.floor(m2x) + 4, m2y + 15, 3, 4, '#222222');
     }
-    if (elapsed > 340) {
-        const exitProgress = Math.min((elapsed - 340) / 60, 1);
+    if (elapsed > 510) {
+        const exitProgress = Math.min((elapsed - 510) / 90, 1);
         // Member 3 - drummer (headband)
         const m3x = vx + 62 + exitProgress * 66;
         const m3y = vy + 8;
@@ -7192,7 +7192,7 @@ function drawCutsceneVanArrival() {
     drawRect(wdx + 2, wdy + 17, 4, 5, '#222244');
     drawRect(wdx + 7, wdy + 17, 4, 5, '#222244');
     // Waldemar waves (arm up)
-    if (elapsed > 200 && game.frameCount % 20 < 12) {
+    if (elapsed > 300 && game.frameCount % 20 < 12) {
         drawRect(wdx + 11, wdy + 6, 2, 2, PAL.peach);
         drawRect(wdx + 11, wdy + 3, 2, 4, PAL.peach);
     } else {
@@ -7205,12 +7205,12 @@ function drawCutsceneVanArrival() {
     drawRect(6, dialogueY, GAME_W - 12, 30, '#111122');
     drawRect(6, dialogueY, GAME_W - 12, 2, '#333355');
 
-    if (elapsed < 160) {
+    if (elapsed < 240) {
         drawText('*VROOOOM*', GAME_W/2 - 28, dialogueY + 10, '#ff6600', 1);
-    } else if (elapsed < 260) {
+    } else if (elapsed < 390) {
         drawText('SKRAECKOEDLAN HAR ANLÄNT!', 12, dialogueY + 4, '#ff6600', 1);
         drawText('VÄNNÄSDAGARNA BLIR RÄDDADE!', 12, dialogueY + 16, PAL.yellow, 1);
-    } else if (elapsed < 360) {
+    } else if (elapsed < 540) {
         drawText('WALDEMAR:', 12, dialogueY + 4, PAL.green, 1);
         drawText('ÄNTLIGEN! RIKTIGT BAND!', 12, dialogueY + 16, PAL.white, 1);
     } else {
@@ -7226,7 +7226,7 @@ function drawCutsceneConcertIntro() {
     bctx.fillStyle = '#000000';
     bctx.fillRect(0, 0, GAME_W, GAME_H);
 
-    const progress = 1 - (game.cutsceneTimer / 300);
+    const progress = 1 - (game.cutsceneTimer / 480);
 
     if (progress > 0.1) {
         // Fire glow around text
@@ -7547,8 +7547,8 @@ function drawCutsceneConcert() {
     }
     drawText('OSKARSPARKEN - VÄNNÄSDAGARNA', GAME_W/2 - 86, 15, PAL.green, 1);
 
-    const concertElapsed = 900 - game.cutsceneTimer;
-    if (concertElapsed > 300 && game.frameCount % 50 < 35) {
+    const concertElapsed = 1200 - game.cutsceneTimer;
+    if (concertElapsed > 450 && game.frameCount % 50 < 35) {
         drawText('TRYCK ENTER', GAME_W/2 - 34, GAME_H - 8, PAL.grey, 1);
     }
 }
