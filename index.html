@@ -6591,7 +6591,7 @@ function drawTitleScreen() {
     drawRect(0, GAME_H - 32, GAME_W, 32, '#333333');
     drawRect(0, GAME_H - 33, GAME_W, 2, '#444444');
     for (let i = 0; i < GAME_W; i += 20) {
-        drawRect(((i - game.frameCount * 2) % GAME_W + GAME_W) % GAME_W, GAME_H - 18, 10, 2, PAL.yellow);
+        drawRect(i, GAME_H - 18, 10, 2, PAL.yellow);
     }
 
     // Festival light string across top
